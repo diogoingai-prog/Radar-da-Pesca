@@ -13,31 +13,33 @@
     :root { --accent: #38bdf8; --bg: #0f172a; --card: #ffffff; --price: #16a34a; --status-red: #dc2626; --badge-green: #10b981; }
     body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: var(--bg); overflow: hidden; color: #1e293b; -webkit-tap-highlight-color: transparent; }
     
+    /* --- SPLASH SCREEN COM TRAVA DE SEGURANÇA --- */
     #splash {
       position: fixed; inset: 0; background: var(--bg); z-index: 9999;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      transition: opacity 0.8s ease-out;
+      transition: opacity 0.8s ease-out, visibility 0.8s;
     }
-    .radar-container { position: relative; width: 200px; height: 200px; }
+    .radar-container { position: relative; width: 220px; height: 220px; }
     .radar-rings circle { fill: none; stroke: rgba(56, 189, 248, 0.15); stroke-width: 1; }
     .radar-scan-line { transform-origin: 100px 100px; animation: scan-anim-reverse 4s linear infinite; }
     .radar-target { fill: var(--accent); animation: slow-pulse 3s ease-in-out infinite; }
     @keyframes scan-anim-reverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
     @keyframes slow-pulse { 0%, 100% { opacity: 0.1; r: 1.5; } 50% { opacity: 0.9; r: 2.2; } }
-    .splash-title { color: #fff; font-size: 24px; font-weight: 900; letter-spacing: 4px; margin-top: 20px; text-align: center; }
-    .splash-sub { color: var(--accent); font-size: 11px; text-align: center; padding: 0 20px; margin-top: 10px; opacity: 0.8; }
+    .splash-title { color: #fff; font-size: 26px; font-weight: 900; letter-spacing: 5px; margin: 25px 0 5px 0; text-align: center; }
+    .splash-sub { color: var(--accent); font-size: 11px; font-weight: 600; text-transform: uppercase; text-align: center; padding: 0 25px; opacity: 0.8; }
 
     #map { height: 100vh; width: 100vw; z-index: 1; background: #e5e7eb; }
-    .crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; pointer-events: none; opacity: 0.5; color: #0f172a; }
+    .crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; pointer-events: none; opacity: 0.6; color: #0f172a; display: flex; align-items: center; justify-content: center; }
 
     .top-bar { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 2000; }
-    .search-box { background: #fff; border-radius: 25px; padding: 10px 18px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    .search-input { border: none; background: transparent; outline: none; width: 100%; font-size: 15px; font-weight: 500; }
+    .search-box { background: #fff; border-radius: 25px; padding: 10px 18px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+    .search-input { border: none; background: transparent; outline: none; width: 100%; font-size: 15px; color: #475569; font-weight: 500; }
 
     .gps-btn { position: absolute; bottom: 280px; right: 20px; z-index: 2500; background: #fff; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid #e0f2fe; color: #1d4ed8; cursor: pointer; }
     .gps-btn.loading { animation: spin 1s linear infinite; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
+    /* --- GAVETA --- */
     .drawer { 
       position: absolute; bottom: 0; left: 0; right: 0; z-index: 2000; 
       background: var(--card); border-radius: 24px 24px 0 0; 
@@ -56,31 +58,25 @@
     .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
     .status-badge { font-size: 8px; font-weight: 800; color: var(--status-red); text-transform: uppercase; }
     .water-badge { font-size: 8px; font-weight: 900; background: var(--badge-green); color: #fff; padding: 2px 10px; border-radius: 20px; text-transform: uppercase; }
-    .city-label { font-size: 20px; font-weight: 800; color: #0f172a; margin: 0; }
+    .city-label { font-size: 20px; font-weight: 800; color: #0f172a; margin: 0 0 10px 0; }
 
-    .env-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 0; }
+    .env-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
     .env-box { background: #f1f5f9; padding: 8px 4px; border-radius: 10px; text-align: center; }
     .env-lbl { display: block; font-size: 7px; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
     .env-val { font-size: 11px; font-weight: 800; color: #0f172a; }
 
-    .top3-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; min-height: 38px; margin-bottom: 10px; }
-    .fish-chip { background: #0f172a; color: #fff; padding: 8px 14px; border-radius: 12px; display: flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 12px; font-weight: 600; }
+    .top3-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; min-height: 38px; margin-bottom: 15px; }
+    .fish-chip { background: #0f172a; color: #fff; padding: 10px 16px; border-radius: 12px; display: flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 12px; font-weight: 600; }
     .fish-chip .status-tag { font-size: 7px; font-weight: 900; background: var(--accent); color: #0f172a; padding: 1px 4px; border-radius: 3px; }
 
-    .scroll-area { 
-      overflow-y: auto; flex: 1; background: #fff; -webkit-overflow-scrolling: touch; 
-      padding: 0 20px 250px 20px;
-      touch-action: pan-y;
-    }
+    .details-title { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin: 0 20px 20px 20px; border-top: 1px solid #f1f5f9; padding-top: 15px; flex-shrink: 0; }
+    .scroll-area { overflow-y: auto; flex: 1; background: #fff; -webkit-overflow-scrolling: touch; padding: 0 20px 250px 20px; touch-action: pan-y; }
 
-    .fish-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 18px; margin-bottom: 15px; }
-    .tech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+    .fish-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px; margin-bottom: 15px; }
+    .tech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
     .tech-item { background: #fff; padding: 10px; border-radius: 12px; border-left: 4px solid var(--accent); position: relative; }
     .tech-item.gold { border-left-color: #f59e0b; }
-    
-    .buy-link { position: absolute; right: 8px; top: 8px; color: var(--price); font-size: 7px; font-weight: 900; text-transform: uppercase; text-decoration: none; display: flex; align-items: center; }
-    .buy-link .material-icons { font-size: 8px; margin-left: 2px; }
-    
+    .buy-link { position: absolute; right: 8px; top: 8px; color: var(--price); font-size: 7px; font-weight: 900; text-transform: uppercase; text-decoration: none; }
     .tech-lbl { display: block; font-size: 8px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
     .tech-val { font-size: 12px; font-weight: 700; color: #0f172a; line-height: 1.4; }
     .footer-msg { text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 11px; font-weight: 600; }
@@ -90,9 +86,9 @@
 
   <div id="splash">
     <div class="radar-container">
-      <svg viewBox="0 0 200 200">
+      <svg viewBox="0 0 200 200" width="220" height="220">
         <g class="radar-rings"><circle cx="100" cy="100" r="98"/><circle cx="100" cy="100" r="75"/><circle cx="100" cy="100" r="50"/></g>
-        <circle cx="130" cy="70" r="2.5" class="radar-target" />
+        <circle cx="135" cy="65" r="2.2" class="radar-target" />
         <g class="radar-scan-line"><path d="M 100 100 L 100 0 A 100 100 0 0 1 200 100 Z" fill="rgba(56, 189, 248, 0.2)"/><line x1="100" y1="100" x2="100" y2="0" stroke="#38bdf8" stroke-width="2.5"/></g>
       </svg>
     </div>
@@ -100,10 +96,10 @@
     <p class="splash-sub">Veja em tempo real qual peixe está no radar para sua pescaria</p>
   </div>
 
-  <div class="top-bar"><div class="search-box"><span class="material-icons" style="color:#94a3b8">search</span><input type="text" id="search-input" class="search-input" placeholder="Cidade ou Rio..." onkeypress="if(event.key==='Enter') buscarManual()"><button onclick="buscarManual()" style="background:none; border:none; font-weight:900; color:#0f172a; cursor:pointer;">IR</button></div></div>
+  <div class="top-bar"><div class="search-box"><span class="material-icons" style="color:#94a3b8">search</span><input type="text" id="search-input" class="search-input" placeholder="Pesquisar cidade ou rio..." onkeypress="if(event.key==='Enter') buscarManual()"><button onclick="buscarManual()" style="background:none; border:none; font-weight:900; color:#0f172a; cursor:pointer;">IR</button></div></div>
   <div class="gps-btn" id="gps-btn" onclick="iniciarGPS()"><span class="material-icons">my_location</span></div>
   <div id="map"></div>
-  <div class="crosshair"><span class="material-icons">add</span></div>
+  <div class="crosshair"><span class="material-icons" style="font-size: 28px;">add</span></div>
 
   <div class="drawer" id="painel">
     <div class="handle" id="drawer-handle"><div class="handle-bar"></div></div>
@@ -133,11 +129,11 @@
     const UF_MAP = {"Acre":"AC","Alagoas":"AL","Amapá":"AP","Amazonas":"AM","Bahia":"BA","Ceará":"CE","Distrito Federal":"DF","Espírito Santo":"ES","Goiás":"GO","Maranhão":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Pará":"PA","Paraíba":"PB","Paraná":"PR","Pernambuco":"PE","Piauí":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rondônia":"RO","Roraima":"RR","Santa Catarina":"SC","São Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
 
     const PEIXES_DB = [
-      { id: 'tilapia', nome: "Tilápia", bacia: ["Paraná","São Francisco","Geral"], isca: "Massa ou Ração", idealT: 22, h: "Manhã/Tarde", prof: "1-3m", p: "Margens", vara: "12lb Telescópica", linha: "0.25mm Mono" },
-      { id: 'traira', nome: "Traíra", bacia: ["Geral"], isca: "Frog ou Lambari", idealT: 23, h: "Fim de tarde", prof: "Raso", p: "Vegetação", vara: "17lb Rápida", linha: "0.25mm Multi" },
-      { id: 'dourado', nome: "Dourado", bacia: ["Paraná","Paraguai","São Francisco"], isca: "Tuvira ou Plugs", idealT: 24, h: "Dia todo", prof: "Meia Água", p: "Corredeiras", vara: "40lb Rápida", linha: "0.40mm Multi" },
-      { id: 'piapara', nome: "Piapara", bacia: ["Paraná","Paraguai"], isca: "Milho ou Caranguejo", idealT: 24, h: "Manhã", prof: "4-8m", p: "Poços", vara: "20lb Média", linha: "0.35mm Mono" },
-      { id: 'tucunare', nome: "Tucunaré Azul", bacia: ["Paraná","Araguaia","Tocantins"], isca: "Zaras ou Sticks", idealT: 27, h: "10h - 16h", prof: "Raso", p: "Troncos", vara: "20lb Rápida", linha: "0.28mm Multi" }
+      { id: 'tilapia', nome: "Tilápia", bacia: ["Paraná","São Francisco","Geral"], isca: "Massa ou Ração furada", idealT: 22, h: "Manhã/Tarde", prof: "1-3m", p: "Margens/Cevas", vara: "12lb Telescópica", linha: "0.25mm Mono" },
+      { id: 'traira', nome: "Traíra", bacia: ["Geral"], isca: "Frog ou Lambari", idealT: 23, h: "Crepúsculo", prof: "Raso", p: "Vegetação", vara: "17lb Ação Rápida", linha: "0.25mm Multi" },
+      { id: 'dourado', nome: "Dourado", bacia: ["Paraná","Paraguai","Uruguai","São Francisco"], isca: "Tuvira ou Plugs", idealT: 24, h: "Dia todo", prof: "Meia Água", p: "Corredeiras", vara: "40lb Rápida", linha: "0.40mm Multi" },
+      { id: 'piapara', nome: "Piapara", bacia: ["Paraná","Paraguai"], isca: "Milho ou Caranguejo", idealT: 24, h: "Manhã", prof: "4-8m", p: "Poços ceifados", vara: "20lb Média", linha: "0.35mm Mono" },
+      { id: 'tucunare', nome: "Tucunaré Azul", bacia: ["Paraná","Araguaia","Tocantins"], isca: "Zaras ou Sticks", idealT: 27, h: "10h - 16h", prof: "0.2-2m", p: "Troncos", vara: "20lb Rápida", linha: "0.28mm Multi" }
     ];
 
     const drawer = document.getElementById('painel');
@@ -185,25 +181,28 @@
       try {
         const pGeo = fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}`).then(r => r.json());
         const pWeather = fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,precipitation&timezone=auto`).then(r => r.json());
+
         const [resGeo, resW] = await Promise.all([pGeo, pWeather]);
         const addr = resGeo.address || {};
         const fullAddr = JSON.stringify(addr).toLowerCase();
         const uf = UF_MAP[addr.state] || "BR";
         const cid = addr.city || addr.town || addr.village || "Local";
         document.getElementById('lbl-cidade').innerText = `📍 ${cid}-${uf}`;
+
+        let bacia = "Desconhecida";
+        if (fullAddr.includes("amazon") || ["AM","PA","RO","RR","AC","AP"].includes(uf)) bacia = "Amazonas";
+        else if (fullAddr.includes("francisco") || ["MG","BA","PE","AL","SE"].includes(uf)) bacia = "São Francisco";
+        else if (fullAddr.includes("parana") || fullAddr.includes("tiet") || ["MS","PR","SP","SC"].includes(uf)) bacia = "Paraná";
+
         const cur = resW.current;
         const moon = getMoonData();
+
         document.getElementById('val-temp').innerText = `${Math.round(cur.temperature_2m)}°C`;
         document.getElementById('val-vento').innerText = `${Math.round(cur.wind_speed_10m)}km/h`;
         document.getElementById('val-press').innerText = `${Math.round(cur.surface_pressure)}hPa`;
         document.getElementById('val-lua').innerHTML = `<span style="margin-right:4px">${moon.i}</span> ${moon.n}`;
         document.getElementById('val-hum').innerText = `${cur.relative_humidity_2m}%`;
         document.getElementById('val-rain').innerText = `${cur.precipitation.toFixed(1)}mm`;
-        
-        let bacia = "Geral";
-        if (fullAddr.includes("amazon") || ["AM","PA","RO"].includes(uf)) bacia = "Amazonas";
-        else if (fullAddr.includes("francisco") || ["MG","BA"].includes(uf)) bacia = "São Francisco";
-        else if (fullAddr.includes("parana") || ["MS","PR","SP"].includes(uf)) bacia = "Paraná";
 
         const top3C = document.getElementById('container-top3');
         const listC = document.getElementById('lista-detalhada');
@@ -225,12 +224,11 @@
             <div class="fish-card">
               <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span style="font-weight:800; font-size:17px; color:#0f172a;">${p.nome}</span>
-                <span style="font-size:9px; font-weight:800; background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:10px;">ATIVIDADE ALTA</span>
+                <span style="font-size:9px; font-weight:800; background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:10px;">PREVISÃO ALTA</span>
               </div>
               <div class="tech-grid">
                 <div class="tech-item gold" style="grid-column: span 2;">
-                  <a href="https://www.mercadolivre.com.br/s/isca-pesca" target="_blank" class="buy-link">Comprar <span class="material-icons">shopping_cart</span></a>
-                  <span class="tech-lbl">Isca Principal</span><span class="tech-val">${p.isca}</span>
+                  <span class="tech-lbl">Isca (Gatilho)</span><span class="tech-val">${p.isca}</span>
                 </div>
                 <div class="tech-item green"><span class="tech-lbl">Horário</span><span class="tech-val">${p.h}</span></div>
                 <div class="tech-item green"><span class="tech-lbl">🌊 Prof.</span><span class="tech-val">${p.prof}</span></div>
@@ -239,15 +237,20 @@
               </div>
             </div>`;
         });
-      } catch (e) {}
+        fecharSplash();
+      } catch (e) { fecharSplash(); }
+    }
+
+    function fecharSplash() {
+      const s = document.getElementById('splash');
+      if(s) { s.style.opacity = '0'; setTimeout(() => s.style.display = 'none', 800); }
     }
 
     function iniciarGPS() {
       navigator.geolocation.getCurrentPosition((pos) => {
         const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         map.flyTo([c.lat, c.lng], 13); rodarRadar(c);
-        setTimeout(() => { document.getElementById('splash').style.opacity = '0'; setTimeout(() => document.getElementById('splash').remove(), 800); }, 3000);
-      }, () => { rodarRadar(map.getCenter()); });
+      }, () => { rodarRadar(map.getCenter()); fecharSplash(); });
     }
     
     function buscarManual() {
@@ -255,7 +258,11 @@
       if(!q) return;
       fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}`).then(r => r.json()).then(data => { if(data[0]) { const c = {lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon)}; map.setView([c.lat, c.lng], 12); rodarRadar(c); } });
     }
-    window.onload = iniciarGPS;
+
+    window.onload = () => { 
+      iniciarGPS(); 
+      setTimeout(fecharSplash, 5000); // VÁLVULA DE SEGURANÇA: FECHA APÓS 5s SEMPRE
+    };
   </script>
 </body>
 </html>
