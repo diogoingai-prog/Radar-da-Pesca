@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-pt">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -10,343 +10,258 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
-    :root { --accent: #0ea5e9; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --green: #16a34a; }
-    body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: var(--bg); overflow: hidden; color: var(--text); -webkit-tap-highlight-color: transparent; }
+    :root { --accent: #38bdf8; --bg: #0f172a; --card: #ffffff; --price: #16a34a; --status-red: #dc2626; --badge-green: #10b981; }
+    body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: var(--bg); overflow: hidden; color: #1e293b; -webkit-tap-highlight-color: transparent; }
     
-    /* SPLASH */
-    #splash { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
-    .loader { width: 48px; height: 48px; border: 5px solid #fff; border-bottom-color: var(--accent); border-radius: 50%; animation: rot 1s linear infinite; }
-    @keyframes rot { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .splash-txt { color: #fff; margin-top: 20px; font-weight: 600; font-size: 14px; letter-spacing: 1px; }
+    /* --- SPLASH SCREEN COM TRAVA DE SEGURANÇA --- */
+    #splash {
+      position: fixed; inset: 0; background: var(--bg); z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.8s ease-out, visibility 0.8s;
+    }
+    .radar-container { position: relative; width: 220px; height: 220px; }
+    .radar-rings circle { fill: none; stroke: rgba(56, 189, 248, 0.15); stroke-width: 1; }
+    .radar-scan-line { transform-origin: 100px 100px; animation: scan-anim-reverse 4s linear infinite; }
+    .radar-target { fill: var(--accent); animation: slow-pulse 3s ease-in-out infinite; }
+    @keyframes scan-anim-reverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
+    @keyframes slow-pulse { 0%, 100% { opacity: 0.1; r: 1.5; } 50% { opacity: 0.9; r: 2.2; } }
+    .splash-title { color: #fff; font-size: 26px; font-weight: 900; letter-spacing: 5px; margin: 25px 0 5px 0; text-align: center; }
+    .splash-sub { color: var(--accent); font-size: 11px; font-weight: 600; text-transform: uppercase; text-align: center; padding: 0 25px; opacity: 0.8; }
 
-    /* MAPA */
     #map { height: 100vh; width: 100vw; z-index: 1; background: #e5e7eb; }
-    .crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; pointer-events: none; color: #0f172a; }
-    
-    /* BARRA DE PESQUISA */
-    .top-bar { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 2000; display: flex; justify-content: center; transition: all 0.3s; pointer-events: none; }
-    .search-box { pointer-events: auto; background: #fff; border-radius: 25px; padding: 12px 20px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); width: 100%; max-width: 500px; }
-    .search-input { border: none; outline: none; width: 100%; font-size: 16px; color: #334155; }
-    
-    /* BOTÃO GPS */
-    .gps-btn { position: absolute; bottom: 340px; right: 20px; z-index: 2500; background: #fff; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); color: var(--accent); cursor: pointer; transition: 0.3s; }
-    .gps-btn.loading { animation: rot 1s linear infinite; }
+    .crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; pointer-events: none; opacity: 0.6; color: #0f172a; display: flex; align-items: center; justify-content: center; }
 
-    /* GAVETA (DRAWER) */
+    .top-bar { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 2000; }
+    .search-box { background: #fff; border-radius: 25px; padding: 10px 18px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+    .search-input { border: none; background: transparent; outline: none; width: 100%; font-size: 15px; color: #475569; font-weight: 500; }
+
+    .gps-btn { position: absolute; bottom: 280px; right: 20px; z-index: 2500; background: #fff; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid #e0f2fe; color: #1d4ed8; cursor: pointer; }
+    .gps-btn.loading { animation: spin 1s linear infinite; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    /* --- GAVETA --- */
     .drawer { 
-      position: absolute; z-index: 2000; 
-      background: var(--card); 
-      box-shadow: 0 -5px 40px rgba(0,0,0,0.15); 
-      display: flex; flex-direction: column; 
-      transition: height 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 2000; 
+      background: var(--card); border-radius: 24px 24px 0 0; 
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.15); 
+      height: 230px; max-height: 94vh;
+      transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1); 
+      display: flex; flex-direction: column; overflow: hidden;
+      touch-action: none;
     }
+    .drawer.open { height: 94vh; }
+    .drawer.dragging { transition: none; }
+    .handle { height: 32px; width: 100%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: grab; }
+    .handle-bar { width: 45px; height: 5px; background: #e2e8f0; border-radius: 10px; }
 
-    /* ESTILO MOBILE */
-    @media (max-width: 768px) {
-      .drawer { bottom: 0; left: 0; right: 0; border-radius: 24px 24px 0 0; height: 300px; max-height: 85vh; }
-      .drawer.open { height: 85vh; }
-      .handle { display: flex; }
-    }
+    .summary { padding: 0 20px 10px 20px; flex-shrink: 0; }
+    .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .status-badge { font-size: 8px; font-weight: 800; color: var(--status-red); text-transform: uppercase; }
+    .water-badge { font-size: 8px; font-weight: 900; background: var(--badge-green); color: #fff; padding: 2px 10px; border-radius: 20px; text-transform: uppercase; }
+    .city-label { font-size: 20px; font-weight: 800; color: #0f172a; margin: 0 0 10px 0; }
 
-    /* ESTILO DESKTOP */
-    @media (min-width: 769px) {
-      .drawer { top: 20px; bottom: 20px; left: 20px; width: 380px; height: auto !important; border-radius: 16px; }
-      .handle { display: none !important; }
-      .top-bar { left: 420px; justify-content: flex-start; }
-      .gps-btn { bottom: 30px; right: 30px; }
-    }
-    
-    /* ÁREA DE ARRASTO (HANDLE) - APENAS O TOPO É ARRASTÁVEL */
-    .drag-header { width: 100%; background: #fff; border-radius: 24px 24px 0 0; cursor: grab; touch-action: none; }
-    .handle { height: 30px; width: 100%; display: flex; align-items: center; justify-content: center; }
-    .handle-bar { width: 40px; height: 5px; background: #cbd5e1; border-radius: 10px; }
+    .env-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+    .env-box { background: #f1f5f9; padding: 8px 4px; border-radius: 10px; text-align: center; }
+    .env-lbl { display: block; font-size: 7px; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
+    .env-val { font-size: 11px; font-weight: 800; color: #0f172a; }
 
-    /* CONTEÚDO */
-    .summary { padding: 5px 20px 10px 20px; }
-    .status-badge { font-size: 10px; font-weight: 800; color: var(--green); display: flex; align-items: center; gap: 4px; }
-    .loading-badge { color: #f59e0b; display: none; } /* Escondido por padrão */
-    
-    .city-label { font-size: 24px; font-weight: 800; color: #0f172a; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .river-tag { font-size: 11px; color: var(--accent); font-weight: 700; display: block; margin-top: 2px; margin-bottom: 12px; text-transform: uppercase; min-height: 15px; }
+    .top3-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; min-height: 38px; margin-bottom: 15px; }
+    .fish-chip { background: #0f172a; color: #fff; padding: 10px 16px; border-radius: 12px; display: flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 12px; font-weight: 600; }
+    .fish-chip .status-tag { font-size: 7px; font-weight: 900; background: var(--accent); color: #0f172a; padding: 1px 4px; border-radius: 3px; }
 
-    .env-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
-    .env-box { background: #f8fafc; padding: 8px; border-radius: 10px; text-align: center; border: 1px solid #e2e8f0; }
-    .env-val { font-size: 13px; font-weight: 800; color: #0f172a; display: block; }
-    .env-lbl { font-size: 9px; font-weight: 600; color: #64748b; text-transform: uppercase; }
+    .details-title { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin: 0 20px 20px 20px; border-top: 1px solid #f1f5f9; padding-top: 15px; flex-shrink: 0; }
+    .scroll-area { overflow-y: auto; flex: 1; background: #fff; -webkit-overflow-scrolling: touch; padding: 0 20px 250px 20px; touch-action: pan-y; }
 
-    /* LISTA DE ROLAGEM (SCROLL SEPARADO) */
-    .content-area { flex: 1; overflow-y: auto; padding: 0 20px 40px 20px; -webkit-overflow-scrolling: touch; background: #fff; }
-    
-    .fish-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
-    .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .f-name { font-size: 16px; font-weight: 800; color: #0f172a; }
-    .f-score { font-size: 10px; font-weight: 700; background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 6px; }
-    
-    .tech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .info-box { background: #f8fafc; padding: 6px; border-radius: 6px; }
-    .ib-lbl { font-size: 8px; font-weight: 700; color: #64748b; display: block; margin-bottom: 2px; }
-    .ib-val { font-size: 11px; font-weight: 600; color: #334155; line-height: 1.2; }
-    .smart-link { color: var(--accent); text-decoration: none; border-bottom: 1px dashed; cursor: pointer; }
-
-    .ad-slot { width: 100%; height: 90px; background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 15px 0; color: #94a3b8; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+    .fish-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px; margin-bottom: 15px; }
+    .tech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+    .tech-item { background: #fff; padding: 10px; border-radius: 12px; border-left: 4px solid var(--accent); position: relative; }
+    .tech-item.gold { border-left-color: #f59e0b; }
+    .buy-link { position: absolute; right: 8px; top: 8px; color: var(--price); font-size: 7px; font-weight: 900; text-transform: uppercase; text-decoration: none; }
+    .tech-lbl { display: block; font-size: 8px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
+    .tech-val { font-size: 12px; font-weight: 700; color: #0f172a; line-height: 1.4; }
+    .footer-msg { text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 11px; font-weight: 600; }
   </style>
 </head>
 <body>
 
   <div id="splash">
-    <div class="loader"></div>
-    <div class="splash-txt">LIGANDO SENSORES...</div>
-  </div>
-
-  <div class="top-bar">
-    <div class="search-box">
-      <span class="material-icons" style="color:#94a3b8">search</span>
-      <input type="text" id="search-input" class="search-input" placeholder="Buscar local..." onkeypress="if(event.key==='Enter') buscarManual()">
-      <span class="material-icons" onclick="buscarManual()" style="color:#0f172a; cursor:pointer;">arrow_forward</span>
+    <div class="radar-container">
+      <svg viewBox="0 0 200 200" width="220" height="220">
+        <g class="radar-rings"><circle cx="100" cy="100" r="98"/><circle cx="100" cy="100" r="75"/><circle cx="100" cy="100" r="50"/></g>
+        <circle cx="135" cy="65" r="2.2" class="radar-target" />
+        <g class="radar-scan-line"><path d="M 100 100 L 100 0 A 100 100 0 0 1 200 100 Z" fill="rgba(56, 189, 248, 0.2)"/><line x1="100" y1="100" x2="100" y2="0" stroke="#38bdf8" stroke-width="2.5"/></g>
+      </svg>
     </div>
+    <h1 class="splash-title">RADAR DA PESCA</h1>
+    <p class="splash-sub">Veja em tempo real qual peixe está no radar para sua pescaria</p>
   </div>
 
+  <div class="top-bar"><div class="search-box"><span class="material-icons" style="color:#94a3b8">search</span><input type="text" id="search-input" class="search-input" placeholder="Pesquisar cidade ou rio..." onkeypress="if(event.key==='Enter') buscarManual()"><button onclick="buscarManual()" style="background:none; border:none; font-weight:900; color:#0f172a; cursor:pointer;">IR</button></div></div>
   <div class="gps-btn" id="gps-btn" onclick="iniciarGPS()"><span class="material-icons">my_location</span></div>
   <div id="map"></div>
-  <div class="crosshair"><span class="material-icons" style="font-size:32px; opacity:0.6;">add</span></div>
+  <div class="crosshair"><span class="material-icons" style="font-size: 28px;">add</span></div>
 
   <div class="drawer" id="painel">
-    <div class="drag-header" id="drag-zone">
-      <div class="handle"><div class="handle-bar"></div></div>
-      <div class="summary">
-        <div class="header-row">
-          <div class="status-badge" id="status-ok"><span class="material-icons" style="font-size:12px;">sensors</span> ONLINE</div>
-          <div class="status-badge loading-badge" id="status-load"><span class="material-icons" style="font-size:12px;">sync</span> BUSCANDO...</div>
-        </div>
-        <h1 class="city-label" id="lbl-cidade">Carregando...</h1>
-        <span class="river-tag" id="lbl-rio"></span>
-
-        <div class="env-grid">
-          <div class="env-box"><span class="env-lbl">Temp</span><span class="env-val" id="val-temp">--</span></div>
-          <div class="env-box"><span class="env-lbl">Chuva</span><span class="env-val" id="val-chuva">--</span></div>
-          <div class="env-box"><span class="env-lbl">Lua</span><span class="env-val" id="val-lua">--</span></div>
-        </div>
+    <div class="handle" id="drawer-handle"><div class="handle-bar"></div></div>
+    <div class="summary" id="drawer-summary">
+      <div class="header-row"><div class="status-badge"><span class="material-icons" style="font-size:10px; vertical-align:middle;">sensors</span> RADAR OPERACIONAL</div><div class="water-badge">EXCLUSIVO ÁGUA DOCE</div></div>
+      <h2 class="city-label" id="lbl-cidade">📍 Localizando...</h2>
+      <div class="env-grid">
+        <div class="env-box"><span class="env-lbl">Temperatura</span><span class="env-val" id="val-temp">--</span></div>
+        <div class="env-box"><span class="env-lbl">Vento</span><span class="env-val" id="val-vento">--</span></div>
+        <div class="env-box"><span class="env-lbl">Pressão</span><span class="env-val" id="val-press">--</span></div>
+        <div class="env-box"><span class="env-lbl">Lua</span><span class="env-val" id="val-lua">--</span></div>
+        <div class="env-box"><span class="env-lbl">Humidade</span><span class="env-val" id="val-hum">--</span></div>
+        <div class="env-box"><span class="env-lbl">Chuva</span><span class="env-val" id="val-rain">--</span></div>
       </div>
+      <div class="top3-row" id="container-top3"></div>
     </div>
-
-    <div class="content-area" id="scroll-content">
-      <div class="ad-slot">PUBLICIDADE GOOGLE</div>
-      <div style="font-size:11px; font-weight:800; color:#94a3b8; text-transform:uppercase; margin-bottom:10px;">Melhores Opções Hoje</div>
-      <div id="lista-peixes"></div>
-      <div style="height:50px;"></div>
-    </div>
+    <div class="details-title">Estratégia Técnica de Pesca</div>
+    <div class="scroll-area" id="scroll-content"><div id="lista-detalhada"></div><div class="footer-msg">Radar da Pesca • Sua Inteligência em Água Doce</div></div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   <script>
-    const map = L.map('map', { zoomControl: false }).setView([-15.7, -47.9], 5);
+    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([-15.7, -47.9], 5);
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}').addTo(map);
 
-    let lastLat = 0, lastLng = 0;
-    
-    // === BANCO DE DADOS (GARANTIDO) ===
-    const PEIXES_DB = [
-      { id: 'traira', nome: "Traíra", tag: 'geral', bacia: ["Geral","Nordeste"], isca: "Frog, Artificial", equip: "Vara 17lb + Molinete", linha: "Multi 0.25mm", anzol: "Offset 3/0", h: "Crepúsculo", prof: "Raso/Mato" },
-      { id: 'tilapia', nome: "Tilápia", tag: 'geral', bacia: ["Geral","Nordeste"], isca: "Massa, Ração", equip: "Vara Telescópica", linha: "0.25mm Mono", anzol: "Chinu 4", h: "Dia", prof: "1-3m" },
-      { id: 'mandi', nome: "Mandi", tag: 'couro', bacia: ["Geral","Nordeste"], isca: "Minhoca, Queijo", equip: "Vara 12lb", linha: "0.30mm Mono", anzol: "Maruseigo 12", h: "Noite", prof: "Fundo" },
-      { id: 'piau', nome: "Piau", tag: 'geral', bacia: ["Geral","Nordeste"], isca: "Milho, Massa", equip: "Vara 15lb", linha: "0.28mm Mono", anzol: "Chinu 3", h: "Dia", prof: "Correnteza" },
-      { id: 'curimba', nome: "Curimba", tag: 'geral', bacia: ["Geral","Nordeste"], isca: "Massa Doce", equip: "Vara 17lb", linha: "0.30mm Mono", anzol: "Maruseigo 14", h: "Dia", prof: "Fundo" },
-      { id: 'pacu', nome: "Pacu", tag: 'geral', bacia: ["Geral","Paraná"], isca: "Coquinho, Massa", equip: "Vara 25lb", linha: "0.40mm Mono", anzol: "Chinu 7", h: "Dia", prof: "Fundo" },
-      { id: 'tucunare', nome: "Tucunaré", tag: 'represa', bacia: ["Geral","Nordeste","Paraná"], isca: "Artificial, Lambari", equip: "Vara 17lb Rápida", linha: "Multi 0.23mm", anzol: "Garatéia", h: "Sol", prof: "Estruturas" },
-      { id: 'dourado', nome: "Dourado", tag: 'rio_grande', bacia: ["Paraná","São Francisco","Nordeste"], isca: "Tuvira, Artificial", equip: "Vara 40lb", linha: "Multi 0.40mm", anzol: "7/0", h: "Sol forte", prof: "Corredeira" },
-      { id: 'piapara', nome: "Piapara", tag: 'rio_grande', bacia: ["Paraná","São Francisco"], isca: "Milho, Caranguejo", equip: "Vara Sensível", linha: "0.30mm", anzol: "Chinu 4", h: "Dia", prof: "Cevas" },
-      { id: 'tambaqui', nome: "Tambaqui", tag: 'geral', bacia: ["Amazonas","Nordeste"], isca: "Salsicha", equip: "Vara 40lb", linha: "0.50mm Mono", anzol: "Circular 5/0", h: "Dia", prof: "Superfície" }
-    ];
-
+    let lastCoords = { lat: 0, lng: 0 };
     const UF_MAP = {"Acre":"AC","Alagoas":"AL","Amapá":"AP","Amazonas":"AM","Bahia":"BA","Ceará":"CE","Distrito Federal":"DF","Espírito Santo":"ES","Goiás":"GO","Maranhão":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Pará":"PA","Paraíba":"PB","Paraná":"PR","Pernambuco":"PE","Piauí":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rondônia":"RO","Roraima":"RR","Santa Catarina":"SC","São Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
 
-    // --- GAVETA DESTRAVADA (Eventos apenas no cabeçalho) ---
+    const PEIXES_DB = [
+      { id: 'tilapia', nome: "Tilápia", bacia: ["Paraná","São Francisco","Geral"], isca: "Massa ou Ração furada", idealT: 22, h: "Manhã/Tarde", prof: "1-3m", p: "Margens/Cevas", vara: "12lb Telescópica", linha: "0.25mm Mono" },
+      { id: 'traira', nome: "Traíra", bacia: ["Geral"], isca: "Frog ou Lambari", idealT: 23, h: "Crepúsculo", prof: "Raso", p: "Vegetação", vara: "17lb Ação Rápida", linha: "0.25mm Multi" },
+      { id: 'dourado', nome: "Dourado", bacia: ["Paraná","Paraguai","Uruguai","São Francisco"], isca: "Tuvira ou Plugs", idealT: 24, h: "Dia todo", prof: "Meia Água", p: "Corredeiras", vara: "40lb Rápida", linha: "0.40mm Multi" },
+      { id: 'piapara', nome: "Piapara", bacia: ["Paraná","Paraguai"], isca: "Milho ou Caranguejo", idealT: 24, h: "Manhã", prof: "4-8m", p: "Poços ceifados", vara: "20lb Média", linha: "0.35mm Mono" },
+      { id: 'tucunare', nome: "Tucunaré Azul", bacia: ["Paraná","Araguaia","Tocantins"], isca: "Zaras ou Sticks", idealT: 27, h: "10h - 16h", prof: "0.2-2m", p: "Troncos", vara: "20lb Rápida", linha: "0.28mm Multi" }
+    ];
+
     const drawer = document.getElementById('painel');
-    const dragZone = document.getElementById('drag-zone');
-    let startY = 0, startH = 0;
+    const scrollContent = document.getElementById('scroll-content');
+    let startY = 0, startH = 0, isDragging = false;
+    const minH = 230, maxH = window.innerHeight * 0.94;
 
-    if(window.innerWidth <= 768) {
-        dragZone.addEventListener('touchstart', e => { 
-            startY = e.touches[0].clientY; 
-            startH = drawer.offsetHeight; 
-        });
-        
-        dragZone.addEventListener('touchmove', e => {
-            const delta = startY - e.touches[0].clientY;
-            // Limites da gaveta (Mínimo 300px, Máximo 85% da tela)
-            const newH = Math.min(window.innerHeight * 0.85, Math.max(300, startH + delta));
-            drawer.style.height = `${newH}px`;
-            e.preventDefault(); // Impede rolagem da página enquanto arrasta a gaveta
-        });
+    const handleStart = (e) => {
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      if (drawer.offsetHeight >= maxH - 10 && scrollContent.scrollTop > 0) return;
+      startY = clientY; startH = drawer.offsetHeight; isDragging = true;
+    };
 
-        dragZone.addEventListener('touchend', () => {
-            if (drawer.offsetHeight > 400) drawer.classList.add('open');
-            else { drawer.classList.remove('open'); drawer.style.height = '300px'; }
-        });
+    const handleMove = (e) => {
+      if (!isDragging) return;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const deltaY = startY - clientY; 
+      if (startH >= maxH - 10 && deltaY > 0) { isDragging = false; return; }
+      let newH = startH + deltaY;
+      if (newH > maxH) newH = maxH + (newH - maxH) * 0.1;
+      if (newH < minH) newH = minH - (minH - newH) * 0.2;
+      drawer.style.height = `${newH}px`;
+      if (e.cancelable) e.preventDefault();
+    };
+
+    const handleEnd = () => {
+      isDragging = false;
+      if (drawer.offsetHeight > minH + 70) { drawer.style.height = `${maxH}px`; drawer.classList.add('open'); }
+      else { drawer.style.height = `${minH}px`; drawer.classList.remove('open'); scrollContent.scrollTop = 0; }
+    };
+
+    drawer.addEventListener('touchstart', handleStart, { passive: true });
+    window.addEventListener('touchmove', handleMove, { passive: false });
+    window.addEventListener('touchend', handleEnd);
+
+    function getMoonData() {
+      const lp = 2551443; const age = Math.floor(((new Date().getTime() - new Date(1970, 0, 7, 20, 35, 0).getTime()) / 1000) % lp / (24 * 3600)) + 1;
+      if (age <= 3) return {n: "Nova", i: "●"}; if (age <= 13) return {n: "Crescente", i: "☽"};
+      if (age <= 17) return {n: "Cheia", i: "●"}; return {n: "Minguante", i: "☾"};
     }
 
-    // --- MAPA DINÂMICO ---
-    map.on('moveend', () => {
-        const c = map.getCenter();
-        document.getElementById('status-ok').style.display = 'none';
-        document.getElementById('status-load').style.display = 'flex';
-        // Delay curto para não travar
-        setTimeout(() => rodarRadar({ lat: c.lat, lng: c.lng }), 500);
-    });
-
-    // --- LÓGICA PRINCIPAL ---
-    async function rodarRadar(coords, preAddr = null) {
+    async function rodarRadar(coords) {
+      if (Math.abs(coords.lat - lastCoords.lat) < 0.005) return;
+      lastCoords = coords;
       try {
-        // 1. Clima + Cidade (Carregamento rápido)
-        const wReq = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,precipitation,weathercode`);
-        const wData = await wReq.json();
-        const cur = wData.current;
-        
-        document.getElementById('val-temp').innerText = `${Math.round(cur.temperature_2m)}°C`;
-        document.getElementById('val-chuva').innerText = `${cur.precipitation} mm`;
-        document.getElementById('val-lua').innerText = getLua();
+        const pGeo = fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}`).then(r => r.json());
+        const pWeather = fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,precipitation&timezone=auto`).then(r => r.json());
 
-        let addr = preAddr;
-        if(!addr) {
-          const gReq = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}`);
-          const gData = await gReq.json();
-          addr = gData.address || {};
-        }
-        
-        // Busca inteligente de nome (evita "Local-MG")
-        const cidade = addr.city || addr.town || addr.village || addr.municipality || addr.hamlet || "Local";
+        const [resGeo, resW] = await Promise.all([pGeo, pWeather]);
+        const addr = resGeo.address || {};
+        const fullAddr = JSON.stringify(addr).toLowerCase();
         const uf = UF_MAP[addr.state] || "BR";
-        document.getElementById('lbl-cidade').innerText = `${cidade}-${uf}`;
+        const cid = addr.city || addr.town || addr.village || "Local";
+        document.getElementById('lbl-cidade').innerText = `📍 ${cid}-${uf}`;
 
-        // Define região básica
-        let bacia = "Geral";
-        if(["PI","MA","CE","RN","PB","PE","AL","SE","BA"].includes(uf)) bacia = "Nordeste";
-        else if(uf === "MG") bacia = (coords.lat < -18.5) ? "Paraná" : "São Francisco";
-        else if(["SP","PR","MS"].includes(uf)) bacia = "Paraná";
+        let bacia = "Desconhecida";
+        if (fullAddr.includes("amazon") || ["AM","PA","RO","RR","AC","AP"].includes(uf)) bacia = "Amazonas";
+        else if (fullAddr.includes("francisco") || ["MG","BA","PE","AL","SE"].includes(uf)) bacia = "São Francisco";
+        else if (fullAddr.includes("parana") || fullAddr.includes("tiet") || ["MS","PR","SP","SC"].includes(uf)) bacia = "Paraná";
+
+        const cur = resW.current;
+        const moon = getMoonData();
+
+        document.getElementById('val-temp').innerText = `${Math.round(cur.temperature_2m)}°C`;
+        document.getElementById('val-vento').innerText = `${Math.round(cur.wind_speed_10m)}km/h`;
+        document.getElementById('val-press').innerText = `${Math.round(cur.surface_pressure)}hPa`;
+        document.getElementById('val-lua').innerHTML = `<span style="margin-right:4px">${moon.i}</span> ${moon.n}`;
+        document.getElementById('val-hum').innerText = `${cur.relative_humidity_2m}%`;
+        document.getElementById('val-rain').innerText = `${cur.precipitation.toFixed(1)}mm`;
+
+        const top3C = document.getElementById('container-top3');
+        const listC = document.getElementById('lista-detalhada');
+        top3C.innerHTML = ''; listC.innerHTML = '';
         
-        if(bacia === "Nordeste") bacia = "Nordeste"; 
+        const sortedFish = PEIXES_DB.filter(p => p.bacia.includes(bacia) || p.bacia.includes("Geral"))
+        .map(p => {
+          let score = 75 - Math.abs(cur.temperature_2m - p.idealT) * 4;
+          if(moon.n === "Cheia") score += 10;
+          return {...p, score};
+        }).sort((a,b) => b.score - a.score);
 
-        // 2. Busca Rio (Assíncrono - não trava)
-        detectarRio(coords.lat, coords.lng, bacia, cur);
+        sortedFish.slice(0,3).forEach(p => {
+          top3C.innerHTML += `<div class="fish-chip">${p.nome} <span class="status-tag">BOM</span></div>`;
+        });
 
-      } catch (e) {
-        console.log(e);
+        sortedFish.forEach(p => {
+          listC.innerHTML += `
+            <div class="fish-card">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:800; font-size:17px; color:#0f172a;">${p.nome}</span>
+                <span style="font-size:9px; font-weight:800; background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:10px;">PREVISÃO ALTA</span>
+              </div>
+              <div class="tech-grid">
+                <div class="tech-item gold" style="grid-column: span 2;">
+                  <span class="tech-lbl">Isca (Gatilho)</span><span class="tech-val">${p.isca}</span>
+                </div>
+                <div class="tech-item green"><span class="tech-lbl">Horário</span><span class="tech-val">${p.h}</span></div>
+                <div class="tech-item green"><span class="tech-lbl">🌊 Prof.</span><span class="tech-val">${p.prof}</span></div>
+                <div class="tech-item"><span class="tech-lbl">Vara</span><span class="tech-val">${p.vara}</span></div>
+                <div class="tech-item"><span class="tech-lbl">Linha</span><span class="tech-val">${p.linha}</span></div>
+              </div>
+            </div>`;
+        });
         fecharSplash();
-      }
+      } catch (e) { fecharSplash(); }
     }
 
-    async function detectarRio(lat, lng, bacia, weather) {
-      document.getElementById('lbl-rio').innerText = "Analisando terreno...";
-      let isRepresa = false, isRioGrande = false;
-      if(bacia === "Nordeste") isRepresa = true; // No NE libera tucunaré
-
-      try {
-        // Timeout de 3s para não travar
-        const controller = new AbortController();
-        const id = setTimeout(() => controller.abort(), 3000);
-
-        const q = `[out:json][timeout:3];(way["waterway"~"river|canal"](around:5000,${lat},${lng});relation["water"~"lake|reservoir"](around:5000,${lat},${lng}););out tags center;`;
-        const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`, { signal: controller.signal });
-        clearTimeout(id);
-        
-        const data = await res.json();
-        if(data.elements && data.elements.length > 0) {
-            const corpo = data.elements.find(e => e.tags.name);
-            if(corpo) {
-                const nome = corpo.tags.name;
-                document.getElementById('lbl-rio').innerText = `Água: ${nome}`;
-                const nUp = nome.toUpperCase();
-                if(nUp.includes("REPRESA") || nUp.includes("LAGO") || nUp.includes("AÇUDE")) isRepresa = true;
-                if(nUp.includes("RIO GRANDE") || nUp.includes("PARANÁ")) isRioGrande = true;
-                if(nUp.includes("PARNAÍBA")) bacia = "Nordeste";
-            } else document.getElementById('lbl-rio').innerText = "Água detectada (s/ nome)";
-        } else {
-            document.getElementById('lbl-rio').innerText = "";
-        }
-      } catch(e) { document.getElementById('lbl-rio').innerText = ""; }
-
-      filtrarPeixes(bacia, isRepresa, isRioGrande, weather);
+    function fecharSplash() {
+      const s = document.getElementById('splash');
+      if(s) { s.style.opacity = '0'; setTimeout(() => s.style.display = 'none', 800); }
     }
 
-    function makeShopLink(termo) {
-        return `https://www.google.com/search?tbm=shop&q=comprar+${encodeURIComponent(termo)}`;
-    }
-
-    function filtrarPeixes(bacia, isRepresa, isRioGrande, w) {
-      const lista = document.getElementById('lista-peixes');
-      lista.innerHTML = "";
-
-      const resultado = PEIXES_DB.filter(p => p.bacia.includes(bacia) || p.bacia.includes("Geral"))
-      .map(p => {
-        let score = 80 - Math.abs(w.temperature_2m - 25) * 2;
-        if(p.tag === 'represa') { if(isRepresa) score += 20; else score -= 30; }
-        if(p.tag === 'rio_grande') { if(isRioGrande) score += 20; else score -= 10; }
-        if(!isRepresa && !isRioGrande && ["traira", "mandi", "tilapia", "piau"].includes(p.id)) score += 15;
-        return {...p, score: Math.min(99, Math.max(30, Math.round(score)))};
-      }).sort((a,b) => b.score - a.score);
-
-      // Renderiza TODOS (garantia de não ficar vazio)
-      resultado.forEach(p => {
-        const color = p.score > 75 ? '#dcfce7' : '#fef9c3';
-        const txtColor = p.score > 75 ? '#166534' : '#854d0e';
-        const linkIsca = makeShopLink("isca " + p.isca);
-        const linkEquip = makeShopLink(p.equip);
-
-        lista.innerHTML += `
-          <div class="fish-card">
-            <div class="card-head"><span class="f-name">${p.nome}</span><span class="f-score" style="background:${color}; color:${txtColor}">${p.score}%</span></div>
-            <div class="tech-grid">
-              <div class="info-box" style="grid-column:span 2; border-left:3px solid #0ea5e9">
-                <span class="ib-lbl">Isca (Toque p/ comprar)</span>
-                <span class="ib-val"><a href="${linkIsca}" target="_blank" class="smart-link">${p.isca} <span class="material-icons" style="font-size:10px">open_in_new</span></a></span>
-              </div>
-              <div class="info-box">
-                <span class="ib-lbl">Equipamento</span>
-                <span class="ib-val"><a href="${linkEquip}" target="_blank" class="smart-link">${p.equip}</a></span>
-              </div>
-              <div class="info-box"><span class="ib-lbl">Linha</span><span class="ib-val">${p.linha}</span></div>
-              <div class="info-box"><span class="ib-lbl">Anzol</span><span class="ib-val">${p.anzol}</span></div>
-              <div class="info-box"><span class="ib-lbl">Horário</span><span class="ib-val">${p.h}</span></div>
-              <div class="info-box"><span class="ib-lbl">Local</span><span class="ib-val">${p.prof}</span></div>
-            </div>
-          </div>`;
-      });
-      
-      document.getElementById('status-load').style.display = 'none';
-      document.getElementById('status-ok').style.display = 'flex';
-      fecharSplash();
-    }
-
-    function fecharSplash() { const s = document.getElementById('splash'); if(s) { s.style.opacity = '0'; setTimeout(() => s.style.display = 'none', 500); } }
-    function getLua() { const d = new Date(); const m = ["Nova","Crescente","Cheia","Minguante"]; return m[Math.floor(d.getDate()/7) % 4]; }
-    
     function iniciarGPS() {
-      const btn = document.getElementById('gps-btn'); btn.classList.add('loading');
-      navigator.geolocation.getCurrentPosition(p => {
-        btn.classList.remove('loading');
-        map.setView([p.coords.latitude, p.coords.longitude], 11);
-        rodarRadar({lat: p.coords.latitude, lng: p.coords.longitude});
-      }, () => { btn.classList.remove('loading'); alert("Ative a localização"); fecharSplash(); });
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        map.flyTo([c.lat, c.lng], 13); rodarRadar(c);
+      }, () => { rodarRadar(map.getCenter()); fecharSplash(); });
     }
-
+    
     function buscarManual() {
-      const q = document.getElementById('search-input').value; if(!q) return;
-      document.getElementById('lbl-cidade').innerText = "Buscando...";
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}, Brazil&addressdetails=1`).then(r=>r.json()).then(d=>{
-        if(d[0]) { 
-          const lat = parseFloat(d[0].lat); const lng = parseFloat(d[0].lon); 
-          map.setView([lat, lng], 11); 
-          rodarRadar({lat, lng}, d[0].address); 
-          if(window.innerWidth <= 768) {
-             const d = document.getElementById('painel'); d.classList.add('open'); d.style.height = '70vh';
-          }
-        } else alert("Local não encontrado");
-      });
+      const q = document.getElementById('search-input').value;
+      if(!q) return;
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}`).then(r => r.json()).then(data => { if(data[0]) { const c = {lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon)}; map.setView([c.lat, c.lng], 12); rodarRadar(c); } });
     }
 
     window.onload = () => { 
       iniciarGPS(); 
-      setTimeout(fecharSplash, 3000); 
+      setTimeout(fecharSplash, 5000); // VÁLVULA DE SEGURANÇA: FECHA APÓS 5s SEMPRE
     };
   </script>
 </body>
