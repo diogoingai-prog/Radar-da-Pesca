@@ -71,21 +71,21 @@
     .handle-bar { width: 40px; height: 5px; background: #cbd5e1; border-radius: 10px; }
 
     /* CONTEÚDO PAINEL */
-    /* Aumentei a área clicável do summary para facilitar o arrasto no mobile */
     .summary { padding: 15px 20px 10px 20px; flex-shrink: 0; cursor: grab; user-select: none; } 
     .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
     .status-badge { font-size: 10px; font-weight: 800; color: var(--green); display: flex; align-items: center; gap: 4px; }
-    .bacia-badge { font-size: 9px; font-weight: 700; background: #f1f5f9; color: #64748b; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+    
+    /* Removed Bacia Badge Style but kept generic styles just in case */
 
     .city-label { font-size: 24px; font-weight: 800; color: #0f172a; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
     .river-tag { font-size: 11px; color: var(--accent); font-weight: 700; display: block; margin-top: 2px; margin-bottom: 15px; text-transform: uppercase; min-height: 15px; }
 
-    .env-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; pointer-events: none; /* Deixa o clique passar para o arrasto da gaveta */ }
+    .env-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; pointer-events: none; }
     .env-box { background: #f8fafc; padding: 8px; border-radius: 10px; text-align: center; border: 1px solid #e2e8f0; }
     .env-val { font-size: 13px; font-weight: 800; color: #0f172a; display: block; }
     .env-lbl { font-size: 9px; font-weight: 600; color: #64748b; text-transform: uppercase; }
 
-    .top-picks { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; margin-bottom: 10px; pointer-events: auto; /* Reativa cliques aqui */ }
+    .top-picks { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; margin-bottom: 10px; pointer-events: auto; }
     .chip { background: #0f172a; color: #fff; padding: 8px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; display: flex; align-items: center; gap: 6px; cursor: pointer; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; }
 
@@ -103,11 +103,9 @@
     .ib-lbl { font-size: 8px; font-weight: 700; color: #64748b; display: block; margin-bottom: 2px; }
     .ib-val { font-size: 11px; font-weight: 600; color: #334155; line-height: 1.2; }
     
-    /* LINK AUTOMÁTICO (CLICÁVEL) */
     .smart-link { color: var(--accent); text-decoration: none; border-bottom: 1px dashed var(--accent); cursor: pointer; }
     .smart-link:hover { color: #0284c7; border-bottom-style: solid; }
 
-    /* ÁREA DE PROPAGANDA (ADSENSE) */
     .ad-slot { width: 100%; height: 100px; background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; color: #94a3b8; font-size: 10px; font-weight: 700; letter-spacing: 1px; flex-direction: column; }
   </style>
 </head>
@@ -136,8 +134,7 @@
     <div class="summary" id="drag-zone">
       <div class="header-row">
         <div class="status-badge"><span class="material-icons" style="font-size:12px;">sensors</span> ONLINE</div>
-        <div id="badge-bacia" class="bacia-badge">GERAL</div>
-      </div>
+        </div>
       <h1 class="city-label" id="lbl-cidade">Aguardando...</h1>
       <span class="river-tag" id="lbl-rio"></span>
 
@@ -162,7 +159,7 @@
       <div class="list-title">Recomendações Completas</div>
       <div id="lista-peixes"></div>
       
-      <div class="footer-msg">Radar da Pesca • V16.0</div>
+      <div class="footer-msg">Radar da Pesca • V16.1</div>
     </div>
   </div>
 
@@ -192,24 +189,20 @@
 
     // --- GESTOS DA GAVETA (MOBILE) ---
     const drawer = document.getElementById('painel');
-    const dragZone = document.getElementById('drag-zone'); // Toda a área superior
+    const dragZone = document.getElementById('drag-zone'); 
     const scrollContent = document.getElementById('scroll-content');
     
     let startY = 0, startH = 0, isDragging = false;
     const minH = 280, maxH = window.innerHeight * 0.90;
 
-    // Função unificada para iniciar o arrasto
     const startDrag = (e) => {
-        // Só funciona no mobile (largura < 769px)
         if(window.innerWidth > 768) return;
-        
-        // Se clicar nos chips (botões), não arrasta
         if (e.target.classList.contains('chip') || e.target.closest('.chip')) return;
 
         startY = e.touches ? e.touches[0].clientY : e.clientY;
         startH = drawer.offsetHeight;
         isDragging = true;
-        drawer.style.transition = 'none'; // Remove transição para arrasto suave
+        drawer.style.transition = 'none'; 
     };
 
     const onDrag = (e) => {
@@ -217,19 +210,17 @@
         const clientY = e.touches ? e.touches[0].clientY : e.clientY;
         const delta = startY - clientY;
         let newH = startH + delta;
-        
-        // Limites
         if (newH > maxH) newH = maxH + (newH - maxH) * 0.1;
-        if (newH < 200) newH = 200; // Mínimo absoluto
+        if (newH < 200) newH = 200; 
         
         drawer.style.height = `${newH}px`;
-        if(e.cancelable) e.preventDefault(); // Evita scroll da página
+        if(e.cancelable) e.preventDefault(); 
     };
 
     const endDrag = () => {
         if (!isDragging) return;
         isDragging = false;
-        drawer.style.transition = 'height 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)'; // Devolve a animação
+        drawer.style.transition = 'height 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)'; 
         
         if (drawer.offsetHeight > 350) {
             drawer.style.height = `${maxH}px`;
@@ -241,11 +232,8 @@
         }
     };
 
-    // Aplica os eventos na área superior (drag-zone) E na alça (handle)
     dragZone.addEventListener('touchstart', startDrag, { passive: false });
     dragZone.addEventListener('mousedown', startDrag);
-    
-    // Eventos globais de movimento
     window.addEventListener('touchmove', onDrag, { passive: false });
     window.addEventListener('mousemove', onDrag);
     window.addEventListener('touchend', endDrag);
@@ -257,9 +245,13 @@
       setTimeout(() => rodarRadar({ lat: c.lat, lng: c.lng }), 600);
     });
 
-    // --- LÓGICA PRINCIPAL ---
+    // --- LÓGICA PRINCIPAL CORRIGIDA ---
     async function rodarRadar(lat, lng, preAddr = null) {
       try {
+        // [CORREÇÃO] Inicializando variáveis para evitar ReferenceError
+        let isRepresa = false;
+        let isRioGrande = false;
+
         // 1. Clima
         const wReq = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,precipitation,weathercode`);
         const wData = await wReq.json();
@@ -292,7 +284,7 @@
         
         if(bacia === "Nordeste") isRepresa = true; 
 
-        document.getElementById('badge-bacia').innerText = bacia.toUpperCase();
+        // [CORREÇÃO] Linha removida: Não atualiza mais o badge-bacia visualmente
 
         try {
           const q = `[out:json][timeout:3];(way["waterway"~"river|canal"](around:5000,${lat},${lng});relation["water"~"lake|reservoir"](around:5000,${lat},${lng}););out tags center;`;
@@ -375,7 +367,7 @@
       const btn = document.getElementById('gps-btn'); btn.classList.add('loading');
       navigator.geolocation.getCurrentPosition(p => {
         btn.classList.remove('loading');
-        map.setView([p.coords.latitude, p.coords.longitude], 11); // Zoom ajustado
+        map.setView([p.coords.latitude, p.coords.longitude], 11); 
         rodarRadar(p.coords.latitude, p.coords.longitude);
       }, () => { btn.classList.remove('loading'); alert("Ative a localização"); fecharSplash(); });
     }
@@ -386,10 +378,9 @@
       fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}, Brazil&addressdetails=1`).then(r=>r.json()).then(d=>{
         if(d[0]) { 
           const lat = parseFloat(d[0].lat); const lng = parseFloat(d[0].lon); 
-          map.setView([lat, lng], 10); // ZOOM REDUZIDO PARA 10 (Mais visão)
+          map.setView([lat, lng], 10); 
           rodarRadar(lat, lng, d[0].address); 
           
-          // Abre a gaveta automaticamente no mobile
           if(window.innerWidth <= 768) {
              const d = document.getElementById('painel');
              d.style.height = `${window.innerHeight * 0.85}px`;
@@ -400,7 +391,6 @@
       });
     }
 
-    // Failsafe: Fecha splash em 3s se travar
     window.onload = () => { 
       iniciarGPS(); 
       setTimeout(fecharSplash, 3000); 
