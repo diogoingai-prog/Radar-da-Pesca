@@ -1,364 +1,933 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Radar da Pesca 📡</title>
-  
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <style>
-    :root { --accent: #0ea5e9; --bg: #0f172a; --card: #ffffff; --text: #1e293b; --green: #16a34a; }
-    body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: var(--bg); overflow: hidden; color: var(--text); -webkit-tap-highlight-color: transparent; }
-    
-    /* SPLASH */
-    #splash { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
-    .loader { width: 48px; height: 48px; border: 5px solid #fff; border-bottom-color: var(--accent); border-radius: 50%; animation: rot 1s linear infinite; }
-    @keyframes rot { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .splash-txt { color: #fff; margin-top: 20px; font-weight: 600; font-size: 14px; letter-spacing: 1px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Radar da Pesca 馃摗</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #38bdf8;
+            --bg: #0f172a;
+            --card: #ffffff;
+            --status-red: #dc2626;
+            --badge-green: #10b981;
+        }
 
-    /* MAPA */
-    #map { height: 100vh; width: 100vw; z-index: 1; background: #e5e7eb; }
-    .crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; pointer-events: none; color: #0f172a; }
-    
-    /* BARRA DE PESQUISA */
-    .top-bar { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 2000; display: flex; justify-content: center; transition: all 0.3s; }
-    .search-box { background: #fff; border-radius: 25px; padding: 12px 20px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); width: 100%; max-width: 500px; }
-    .search-input { border: none; outline: none; width: 100%; font-size: 16px; color: #334155; }
-    
-    .gps-btn { position: absolute; bottom: 300px; right: 20px; z-index: 2500; background: #fff; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); color: var(--accent); cursor: pointer; transition: 0.3s; }
-    .gps-btn.loading { animation: rot 1s linear infinite; }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            overflow: hidden;
+            color: #1e293b;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    /* GAVETA / PAINEL */
-    .drawer { 
-      position: absolute; z-index: 2000; 
-      background: var(--card); 
-      box-shadow: 0 4px 30px rgba(0,0,0,0.15); 
-      display: flex; flex-direction: column; 
-      transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
-    }
+        /* SPLASH SCREEN */
+        #splash {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease-out, visibility 0.8s;
+        }
 
-    /* MOBILE */
-    @media (max-width: 768px) {
-      .drawer { bottom: 0; left: 0; right: 0; border-radius: 24px 24px 0 0; height: 280px; max-height: 90vh; }
-      .drawer.open { height: 85vh; }
-      .handle { display: flex; }
-    }
+        .radar-container {
+            position: relative;
+            width: 220px;
+            height: 220px;
+        }
 
-    /* DESKTOP */
-    @media (min-width: 769px) {
-      .drawer { top: 20px; bottom: 20px; left: 20px; width: 380px; height: auto; border-radius: 16px; }
-      .handle { display: none !important; }
-      .top-bar { left: 420px; justify-content: flex-start; }
-      .search-box { width: 300px; }
-      .gps-btn { bottom: 30px; right: 30px; }
-    }
-    
-    /* ALÇA */
-    .handle { height: 35px; width: 100%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: grab; background: #fff; border-bottom: 1px solid #f1f5f9; touch-action: none; }
-    .handle-bar { width: 40px; height: 5px; background: #cbd5e1; border-radius: 10px; }
+        .radar-rings circle {
+            fill: none;
+            stroke: rgba(56, 189, 248, 0.15);
+            stroke-width: 1;
+        }
 
-    /* CONTEÚDO */
-    .summary { padding: 15px 20px 10px 20px; flex-shrink: 0; }
-    .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-    .status-badge { font-size: 10px; font-weight: 800; color: var(--green); display: flex; align-items: center; gap: 4px; }
-    .bacia-badge { font-size: 9px; font-weight: 700; background: #f1f5f9; color: #64748b; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+        .radar-scan-line {
+            transform-origin: 100px 100px;
+            animation: scan-anim-reverse 4s linear infinite;
+        }
 
-    .city-label { font-size: 24px; font-weight: 800; color: #0f172a; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
-    .river-tag { font-size: 11px; color: var(--accent); font-weight: 700; display: block; margin-top: 2px; margin-bottom: 15px; text-transform: uppercase; min-height: 15px; }
+        .radar-target {
+            fill: var(--accent);
+            animation: slow-pulse 3s ease-in-out infinite;
+        }
 
-    .env-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
-    .env-box { background: #f8fafc; padding: 8px; border-radius: 10px; text-align: center; border: 1px solid #e2e8f0; }
-    .env-val { font-size: 13px; font-weight: 800; color: #0f172a; display: block; }
-    .env-lbl { font-size: 9px; font-weight: 600; color: #64748b; text-transform: uppercase; }
+        @keyframes scan-anim-reverse {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+        }
 
-    .top-picks { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; margin-bottom: 10px; }
-    .chip { background: #0f172a; color: #fff; padding: 8px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; display: flex; align-items: center; gap: 6px; cursor: pointer; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; }
+        @keyframes slow-pulse {
+            0%, 100% { opacity: 0.1; r: 1.5; }
+            50% { opacity: 0.9; r: 2.2; }
+        }
 
-    .content-area { flex: 1; overflow-y: auto; padding: 0 20px 20px 20px; -webkit-overflow-scrolling: touch; }
-    .list-title { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin: 10px 0; letter-spacing: 1px; border-top: 1px solid #f1f5f9; padding-top: 15px; }
+        .splash-title {
+            color: #fff;
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: 5px;
+            margin: 25px 0 5px 0;
+            text-align: center;
+        }
 
-    .fish-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 10px; transition: transform 0.1s; }
-    .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .f-name { font-size: 16px; font-weight: 800; color: #0f172a; }
-    .f-score { font-size: 10px; font-weight: 700; background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 6px; }
-    
-    .tech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .info-box { background: #f8fafc; padding: 6px 8px; border-radius: 6px; }
-    .ib-lbl { font-size: 8px; font-weight: 700; color: #64748b; display: block; margin-bottom: 2px; }
-    .ib-val { font-size: 11px; font-weight: 600; color: #334155; line-height: 1.2; }
-    
-    /* LINK AUTOMÁTICO (CLICÁVEL) */
-    .smart-link { color: var(--accent); text-decoration: none; border-bottom: 1px dashed var(--accent); cursor: pointer; }
-    .smart-link:hover { color: #0284c7; border-bottom-style: solid; }
+        .splash-sub {
+            color: var(--accent);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            text-align: center;
+            padding: 0 25px;
+            opacity: 0.8;
+        }
 
-    /* ÁREA DE PROPAGANDA (ADSENSE) */
-    .ad-slot { width: 100%; height: 100px; background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; color: #94a3b8; font-size: 10px; font-weight: 700; letter-spacing: 1px; flex-direction: column; }
-  </style>
+        /* MAPA & UI */
+        #map {
+            height: 100vh;
+            width: 100vw;
+            z-index: 1;
+            background: #e5e7eb;
+        }
+
+        .crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0.6;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .top-bar {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            z-index: 2000;
+        }
+
+        .search-box {
+            background: #fff;
+            border-radius: 25px;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        }
+
+        .search-input {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            font-size: 15px;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .gps-btn {
+            position: absolute;
+            bottom: 280px;
+            right: 20px;
+            z-index: 2500;
+            background: #fff;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 2px solid #e0f2fe;
+            color: #1d4ed8;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .gps-btn:active {
+            transform: scale(0.95);
+        }
+
+        .gps-btn.loading {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        /* GAVETA (DRAWER) */
+        .drawer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 2000;
+            background: var(--card);
+            border-radius: 24px 24px 0 0;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
+            height: 230px;
+            max-height: 94vh;
+            transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        .drawer.open {
+            height: 94vh;
+        }
+
+        .drawer.dragging {
+            transition: none;
+        }
+
+        .handle {
+            height: 32px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            cursor: grab;
+        }
+
+        .handle-bar {
+            width: 45px;
+            height: 5px;
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+
+        /* CONTE脷DO DA GAVETA */
+        .summary {
+            padding: 0 20px 10px 20px;
+            flex-shrink: 0;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .status-badge {
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--status-red);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .bacia-badge {
+            font-size: 8px;
+            font-weight: 900;
+            background: #334155;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .city-label {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 10px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .river-tag {
+            font-size: 10px;
+            color: #0891b2;
+            font-weight: 700;
+            display: block;
+            margin-top: -5px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .env-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .env-box {
+            background: #f8fafc;
+            padding: 8px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #f1f5f9;
+        }
+
+        .env-lbl {
+            display: block;
+            font-size: 9px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .env-val {
+            font-size: 13px;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .top3-row {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            min-height: 38px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+        }
+
+        .fish-chip {
+            background: #0f172a;
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            font-size: 11px;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+        }
+
+        .fish-chip .score-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--badge-green);
+        }
+
+        .details-title {
+            font-size: 11px;
+            font-weight: 800;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 20px 15px 20px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 15px;
+            flex-shrink: 0;
+        }
+
+        .scroll-area {
+            overflow-y: auto;
+            flex: 1;
+            background: #fff;
+            -webkit-overflow-scrolling: touch;
+            padding: 0 20px 100px 20px;
+            touch-action: pan-y;
+        }
+
+        /* 脕REA DE PROPAGANDA */
+        .ad-slot {
+            width: 100%;
+            height: 100px;
+            background: #f1f5f9;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .fish-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .fish-name {
+            font-weight: 800;
+            font-size: 16px;
+            color: #0f172a;
+        }
+
+        .match-tag {
+            font-size: 9px;
+            font-weight: 800;
+            background: #ecfccb;
+            color: #4d7c0f;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .tech-item {
+            background: #f8fafc;
+            padding: 8px 12px;
+            border-left: 3px solid var(--accent);
+            border-radius: 8px;
+        }
+
+        .tech-item.gold {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .tech-lbl {
+            display: block;
+            font-size: 8px;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .tech-val {
+            font-size: 11px;
+            font-weight: 700;
+            color: #334155;
+            line-height: 1.3;
+        }
+        
+        .tech-val a {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+        .tech-val a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-msg {
+            text-align: center;
+            padding: 30px 20px;
+            color: #cbd5e1;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
 </head>
 <body>
-
-  <div id="splash">
-    <div class="loader"></div>
-    <div class="splash-txt">CARREGANDO SISTEMA...</div>
-  </div>
-
-  <div class="top-bar">
-    <div class="search-box">
-      <span class="material-icons" style="color:#94a3b8">search</span>
-      <input type="text" id="search-input" class="search-input" placeholder="Buscar local..." onkeypress="if(event.key==='Enter') buscarManual()">
-      <span class="material-icons" onclick="buscarManual()" style="color:#0f172a; cursor:pointer;">arrow_forward</span>
-    </div>
-  </div>
-
-  <div class="gps-btn" id="gps-btn" onclick="iniciarGPS()"><span class="material-icons">my_location</span></div>
-  <div id="map"></div>
-  <div class="crosshair"><span class="material-icons" style="font-size:32px; opacity:0.6;">add</span></div>
-
-  <div class="drawer" id="painel">
-    <div class="handle" id="drag-handle"><div class="handle-bar"></div></div>
-    
-    <div class="summary">
-      <div class="header-row">
-        <div class="status-badge"><span class="material-icons" style="font-size:12px;">sensors</span> ONLINE</div>
-        <div id="badge-bacia" class="bacia-badge">GERAL</div>
-      </div>
-      <h1 class="city-label" id="lbl-cidade">Aguardando...</h1>
-      <span class="river-tag" id="lbl-rio"></span>
-
-      <div class="env-grid">
-        <div class="env-box"><span class="env-lbl">Clima</span><span class="env-val" id="val-temp">--</span></div>
-        <div class="env-box"><span class="env-lbl">Vento</span><span class="env-val" id="val-vento">--</span></div>
-        <div class="env-box"><span class="env-lbl">Lua</span><span class="env-val" id="val-lua">--</span></div>
-        <div class="env-box"><span class="env-lbl">Pressão</span><span class="env-val" id="val-press">--</span></div>
-        <div class="env-box"><span class="env-lbl">Chuva</span><span class="env-val" id="val-chuva">--</span></div>
-        <div class="env-box"><span class="env-lbl">Umidade</span><span class="env-val" id="val-hum">--</span></div>
-      </div>
-
-      <div class="top-picks" id="chips-container"></div>
+    <div id="splash">
+        <div class="radar-container">
+            <svg viewBox="0 0 200 200" width="220" height="220">
+                <g class="radar-rings"><circle cx="100" cy="100" r="98"/><circle cx="100" cy="100" r="75"/><circle cx="100" cy="100" r="50"/></g>
+                <circle cx="135" cy="65" r="2.2" class="radar-target" />
+                <g class="radar-scan-line"><path d="M 100 100 L 100 0 A 100 100 0 0 1 200 100 Z" fill="rgba(56, 189, 248, 0.2)"/><line x1="100" y1="100" x2="100" y2="0" stroke="#38bdf8" stroke-width="2.5"/></g>
+            </svg>
+        </div>
+        <h1 class="splash-title">RADAR DA PESCA</h1>
+        <p class="splash-sub">Carregando mapa hidrogr谩fico...</p>
     </div>
 
-    <div class="content-area" id="scroll-content">
-      
-      <div class="ad-slot">
-        <span>PUBLICIDADE GOOGLE</span>
-        <span style="font-size:9px; font-weight:400; margin-top:5px;">(Insira seu código AdSense aqui)</span>
-      </div>
-
-      <div class="list-title">Recomendações Completas</div>
-      <div id="lista-peixes"></div>
-      
-      <div class="footer-msg">Radar da Pesca • V15.0</div>
+    <div class="top-bar">
+        <div class="search-box">
+            <span class="material-icons" style="color:#94a3b8">search</span>
+            <input type="text" id="search-input" class="search-input" placeholder="Cidade ou rio..." onkeypress="if(event.key==='Enter') buscarManual()">
+            <button onclick="buscarManual()" style="background:none; border:none; font-weight:900; color:#0f172a; cursor:pointer;">IR</button>
+        </div>
     </div>
-  </div>
 
-  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-  <script>
-    // --- MAPA ---
-    const map = L.map('map', { zoomControl: false }).setView([-15.7, -47.9], 5);
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}').addTo(map);
+    <div class="gps-btn" id="gps-btn" onclick="iniciarGPS()"><span class="material-icons">my_location</span></div>
+    <div id="map"></div>
+    <div class="crosshair"><span class="material-icons" style="font-size: 28px;">add</span></div>
 
-    let lastLat = 0, lastLng = 0;
-    
-    // --- BANCO DE DADOS LIMPO (Sem links manuais) ---
-    const PEIXES_DB = [
-      { id: 'traira', nome: "Traíra", tag: 'geral', bacia: ["Geral","Nordeste"], isca: "Frog, Artificial", idealT: 24, h: "Crepúsculo", prof: "Raso/Mato", equip: "Vara 17lb + Molinete", linha: "Multi 0.25mm", chumbo: "Sem peso", anzol: "Offset 3/0" },
-      { id: 'tilapia', nome: "Tilápia", tag: 'geral', bacia: ["Geral","Nordeste"], isca: "Massa, Ração", idealT: 25, h: "Dia", prof: "1-3m", equip: "Vara Telescópica", linha: "0.25mm Mono", chumbo: "Arroz", anzol: "Chinu 4" },
-      { id: 'mandi', nome: "Mandi", tag: 'couro', bacia: ["Geral","Nordeste"], isca: "Minhoca, Queijo", idealT: 24, h: "Noite", prof: "Fundo", equip: "Vara 12lb", linha: "0.30mm Mono", chumbo: "Oliva 15g", anzol: "Maruseigo 12" },
-      { id: 'piau', nome: "Piau", tag: 'geral', bacia: ["Geral","Nordeste"], isca: "Milho, Massa", idealT: 24, h: "Dia", prof: "Correnteza", equip: "Vara 15lb", linha: "0.28mm Mono", chumbo: "Oliva P", anzol: "Chinu 3" },
-      { id: 'curimba', nome: "Curimba", tag: 'geral', bacia: ["Geral","Nordeste"], isca: "Massa Doce", idealT: 23, h: "Dia", prof: "Fundo/Barro", equip: "Vara 17lb", linha: "0.30mm Mono", chumbo: "Oliva 20g", anzol: "Maruseigo 14" },
-      { id: 'pacu', nome: "Pacu", tag: 'geral', bacia: ["Geral","Paraná"], isca: "Coquinho, Massa", idealT: 26, h: "Dia", prof: "Fundo", equip: "Vara 25lb", linha: "0.40mm Mono", chumbo: "Oliva 30g", anzol: "Chinu 7" },
-      { id: 'tucunare', nome: "Tucunaré", tag: 'represa', bacia: ["Geral","Nordeste","Paraná"], isca: "Artificial, Lambari", idealT: 27, h: "Sol", prof: "Estruturas", equip: "Vara 17lb Rápida", linha: "Multi 0.23mm", chumbo: "Nenhum", anzol: "Garatéia" },
-      { id: 'dourado', nome: "Dourado", tag: 'rio_grande', bacia: ["Paraná","São Francisco","Nordeste"], isca: "Tuvira, Artificial", idealT: 25, h: "Sol forte", prof: "Corredeira", equip: "Vara 40lb", linha: "Multi 0.40mm", chumbo: "Sem peso", anzol: "7/0" },
-      { id: 'piapara', nome: "Piapara", tag: 'rio_grande', bacia: ["Paraná","São Francisco"], isca: "Milho, Caranguejo", idealT: 23, h: "Dia", prof: "Cevas", equip: "Vara Sensível", linha: "0.30mm", chumbo: "Redonda", anzol: "Chinu 4" },
-      { id: 'tambaqui', nome: "Tambaqui", tag: 'geral', bacia: ["Amazonas","Nordeste"], isca: "Salsicha", idealT: 28, h: "Dia", prof: "Superfície", equip: "Vara 40lb", linha: "0.50mm Mono", chumbo: "Boia", anzol: "Circular 5/0" }
-    ];
-
-    const UF_MAP = {"Acre":"AC","Alagoas":"AL","Amapá":"AP","Amazonas":"AM","Bahia":"BA","Ceará":"CE","Distrito Federal":"DF","Espírito Santo":"ES","Goiás":"GO","Maranhão":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Pará":"PA","Paraíba":"PB","Paraná":"PR","Pernambuco":"PE","Piauí":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rondônia":"RO","Roraima":"RR","Santa Catarina":"SC","São Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
-
-    // --- GESTOS DA GAVETA (MOBILE) ---
-    const drawer = document.getElementById('painel');
-    const handle = document.getElementById('drag-handle');
-    let startY = 0, startH = 0;
-
-    if(window.innerWidth <= 768) {
-        handle.addEventListener('touchstart', e => { startY = e.touches[0].clientY; startH = drawer.offsetHeight; });
-        handle.addEventListener('touchmove', e => {
-          const delta = startY - e.touches[0].clientY;
-          const newH = Math.min(window.innerHeight * 0.9, Math.max(280, startH + delta));
-          drawer.style.height = `${newH}px`;
-        });
-        handle.addEventListener('touchend', () => {
-          if (drawer.offsetHeight > 400) drawer.classList.add('open');
-          else { drawer.classList.remove('open'); drawer.style.height = '280px'; }
-        });
-    }
-
-    // --- MAPA ---
-    map.on('moveend', () => {
-      const c = map.getCenter();
-      setTimeout(() => rodarRadar({ lat: c.lat, lng: c.lng }), 600);
-    });
-
-    // --- LÓGICA PRINCIPAL ---
-    async function rodarRadar(lat, lng, preAddr = null) {
-      try {
-        // 1. Clima
-        const wReq = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,precipitation,weathercode`);
-        const wData = await wReq.json();
-        const cur = wData.current;
-        
-        document.getElementById('val-temp').innerText = `${Math.round(cur.temperature_2m)}°C`;
-        document.getElementById('val-vento').innerText = `${Math.round(cur.wind_speed_10m)} km/h`;
-        document.getElementById('val-press').innerText = `${Math.round(cur.surface_pressure)} hPa`;
-        document.getElementById('val-chuva').innerText = `${cur.precipitation} mm`;
-        document.getElementById('val-hum').innerText = `${cur.relative_humidity_2m}%`;
-        document.getElementById('val-lua').innerText = getLua();
-
-        // 2. Local
-        let addr = preAddr;
-        if(!addr) {
-          const gReq = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-          const gData = await gReq.json();
-          addr = gData.address || {};
-        }
-        
-        const cidade = addr.city || addr.town || addr.village || addr.municipality || "Local";
-        const uf = UF_MAP[addr.state] || "BR";
-        document.getElementById('lbl-cidade').innerText = `${cidade}-${uf}`;
-
-        // 3. Bacia e Rio (Overpass)
-        let bacia = "Geral";
-        if(["PI","MA","CE","RN","PB","PE","AL","SE","BA"].includes(uf)) bacia = "Nordeste";
-        else if(uf === "MG") bacia = (lat < -18.5) ? "Paraná" : "São Francisco";
-        else if(["SP","PR","MS"].includes(uf)) bacia = "Paraná";
-        
-        if(bacia === "Nordeste") isRepresa = true; 
-
-        document.getElementById('badge-bacia').innerText = bacia.toUpperCase();
-
-        try {
-          const q = `[out:json][timeout:3];(way["waterway"~"river|canal"](around:5000,${lat},${lng});relation["water"~"lake|reservoir"](around:5000,${lat},${lng}););out tags center;`;
-          const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
-          const data = await res.json();
-          if(data.elements && data.elements.length > 0) {
-            const corpo = data.elements.find(e => e.tags.name);
-            if(corpo) {
-              const nome = corpo.tags.name;
-              document.getElementById('lbl-rio').innerText = `Próximo: ${nome}`;
-              const nUp = nome.toUpperCase();
-              if(nUp.includes("REPRESA") || nUp.includes("LAGO") || nUp.includes("BARRAGEM") || nUp.includes("AÇUDE")) isRepresa = true;
-              if(nUp.includes("RIO GRANDE") || nUp.includes("PARANÁ")) isRioGrande = true;
-              if(nUp.includes("PARNAÍBA")) bacia = "Nordeste";
-            } else document.getElementById('lbl-rio').innerText = "Água detectada";
-          } else document.getElementById('lbl-rio').innerText = "";
-        } catch(e) { document.getElementById('lbl-rio').innerText = ""; }
-
-        filtrarPeixes(bacia, isRepresa, isRioGrande, cur);
-
-      } catch (e) { console.log(e); fecharSplash(); }
-    }
-
-    // --- GERADOR DE LINKS AUTOMÁTICOS ---
-    function makeShopLink(termo) {
-        return `https://www.google.com/search?tbm=shop&q=comprar+${encodeURIComponent(termo)}`;
-    }
-
-    function filtrarPeixes(bacia, isRepresa, isRioGrande, w) {
-      const top3 = document.getElementById('chips-container');
-      const lista = document.getElementById('lista-peixes');
-      top3.innerHTML = ""; lista.innerHTML = "";
-
-      const resultado = PEIXES_DB.filter(p => p.bacia.includes(bacia) || p.bacia.includes("Geral"))
-      .map(p => {
-        let score = 80 - Math.abs(w.temperature_2m - p.idealT) * 3;
-        if(p.tag === 'represa') { if(isRepresa) score += 20; else score -= 40; }
-        if(p.tag === 'rio_grande') { if(isRioGrande) score += 20; else score -= 15; }
-        if(!isRepresa && !isRioGrande && ["traira", "mandi", "tilapia", "piau"].includes(p.id)) score += 15;
-        
-        return {...p, score: Math.min(99, Math.max(20, Math.round(score)))};
-      }).sort((a,b) => b.score - a.score);
-
-      resultado.slice(0,3).forEach(p => {
-        top3.innerHTML += `<div class="chip"><div class="dot" style="background:${p.score>70?'#16a34a':'#eab308'}"></div>${p.nome}</div>`;
-      });
-
-      resultado.forEach(p => {
-        const color = p.score > 75 ? '#dcfce7' : '#fef9c3';
-        const txtColor = p.score > 75 ? '#166534' : '#854d0e';
-        
-        // GERA LINKS AUTOMÁTICOS AQUI
-        const linkIsca = makeShopLink("isca " + p.isca);
-        const linkEquip = makeShopLink(p.equip);
-
-        lista.innerHTML += `
-          <div class="fish-card">
-            <div class="card-head"><span class="f-name">${p.nome}</span><span class="f-score" style="background:${color}; color:${txtColor}">${p.score}%</span></div>
-            <div class="tech-grid">
-              <div class="tech-item gold" style="grid-column:span 2">
-                <span class="ib-lbl">Isca Matadeira (Toque para comprar)</span>
-                <span class="ib-val"><a href="${linkIsca}" target="_blank" class="smart-link">${p.isca} <span class="material-icons" style="font-size:10px">open_in_new</span></a></span>
-              </div>
-              <div class="tech-item">
-                <span class="ib-lbl">Equipamento</span>
-                <span class="ib-val"><a href="${linkEquip}" target="_blank" class="smart-link">${p.equip}</a></span>
-              </div>
-              <div class="tech-item"><span class="ib-lbl">Linha</span><span class="ib-val">${p.linha}</span></div>
-              <div class="tech-item"><span class="ib-lbl">Anzol</span><span class="ib-val">${p.anzol}</span></div>
-              <div class="tech-item"><span class="ib-lbl">Chumbada</span><span class="ib-val">${p.chumbo}</span></div>
-              <div class="tech-item"><span class="ib-lbl">Local</span><span class="ib-val">${p.prof}</span></div>
+    <div class="drawer" id="painel">
+        <div class="handle" id="drawer-handle"><div class="handle-bar"></div></div>
+        <div class="summary" id="drawer-summary">
+            <div class="header-row">
+                <div class="status-badge"><span class="material-icons" style="font-size:12px;">sensors</span> RADAR ONLINE</div>
+                <div id="badge-bacia" class="bacia-badge">BACIA: GERAL</div>
             </div>
-          </div>`;
-      });
-      fecharSplash();
-    }
+            <h2 class="city-label" id="lbl-cidade">馃搷 Aguardando...</h2>
+            <span id="lbl-rio" class="river-tag"></span>
 
-    function fecharSplash() { const s = document.getElementById('splash'); if(s) { s.style.opacity = '0'; setTimeout(() => s.style.display = 'none', 500); } }
-    function getLua() { const d = new Date(); const m = ["Nova","Crescente","Cheia","Minguante"]; return m[Math.floor(d.getDate()/7) % 4]; }
-    
-    function iniciarGPS() {
-      const btn = document.getElementById('gps-btn'); btn.classList.add('loading');
-      navigator.geolocation.getCurrentPosition(p => {
-        btn.classList.remove('loading');
-        map.setView([p.coords.latitude, p.coords.longitude], 11); // Zoom 11
-        rodarRadar(p.coords.latitude, p.coords.longitude);
-      }, () => { btn.classList.remove('loading'); alert("Ative a localização"); fecharSplash(); });
-    }
+            <div class="env-grid">
+                <div class="env-box"><span class="env-lbl">Temp. Ar</span><span class="env-val" id="val-temp">--</span></div>
+                <div class="env-box"><span class="env-lbl">Vento</span><span class="env-val" id="val-vento">--</span></div>
+                <div class="env-box"><span class="env-lbl">Lua Hoje</span><span class="env-val" id="val-lua">--</span></div>
+                <div class="env-box"><span class="env-lbl">Press茫o</span><span class="env-val" id="val-press">--</span></div>
+                <div class="env-box"><span class="env-lbl">Chuva</span><span class="env-val" id="val-rain">--</span></div>
+                <div class="env-box"><span class="env-lbl">Humidade</span><span class="env-val" id="val-hum">--</span></div>
+            </div>
 
-    function buscarManual() {
-      const q = document.getElementById('search-input').value; if(!q) return;
-      document.getElementById('lbl-cidade').innerText = "Buscando...";
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}, Brazil&addressdetails=1`).then(r=>r.json()).then(d=>{
-        if(d[0]) { 
-          const lat = parseFloat(d[0].lat); const lng = parseFloat(d[0].lon); 
-          map.setView([lat, lng], 11); 
-          rodarRadar(lat, lng, d[0].address); 
-          if(window.innerWidth <= 768) {
-             const d = document.getElementById('painel');
-             d.classList.add('open'); d.style.height = '70vh';
-          }
-        } 
-        else alert("Local não encontrado");
-      });
-    }
+            <div class="top3-row" id="container-top3"></div>
+        </div>
 
-    // Auto-update no arrasto
-    map.on('moveend', () => {
-        const c = map.getCenter();
-        if(Math.abs(c.lat - lastLat) > 0.02) { 
-            lastLat = c.lat;
-            setTimeout(() => rodarRadar(c.lat, c.lng), 800);
+        <div class="details-title">Recomenda莽玫es</div>
+        <div class="scroll-area" id="scroll-content">
+            <div class="ad-slot">Publicidade Google AdSense</div>
+            <div id="lista-detalhada"></div>
+            <div class="footer-msg">Radar da Pesca 鈥� Tecnologia Diogo Ingai</div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // --- MAPA ---
+        const map = L.map('map', {
+            zoomControl: false,
+            attributionControl: false
+        }).setView([-15.7, -47.9], 5); // Centro do Brasil
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}').addTo(map);
+
+        let lastCoords = { lat: 0, lng: 0 };
+
+        const UF_MAP = {"Acre":"AC","Alagoas":"AL","Amap谩":"AP","Amazonas":"AM","Bahia":"BA","Cear谩":"CE","Distrito Federal":"DF","Esp铆rito Santo":"ES","Goi谩s":"GO","Maranh茫o":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Par谩":"PA","Para铆ba":"PB","Paran谩":"PR","Pernambuco":"PE","Piau铆":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rond么nia":"RO","Roraima":"RR","Santa Catarina":"SC","S茫o Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
+
+        // Base de Dados de Peixes com links de compra (integrada da minha vers茫o anterior)
+        const PEIXES_DB = [
+            // === RIOS PEQUENOS E M脡DIOS (Inga铆, Capivari, c贸rregos) ===
+            { id: 'lambari', nome: "Lambari", tag: 'geral', bacia: ["Geral","Rio Grande"], isca: "Massinha, Mosca, P茫o", idealT: 22, h: "Dia", prof: "Raso", p: "Corredeira/Remanso", vara: "Micro/Bambu", linha: "0.15mm Mono", onde_comprar_isca: "https://amzn.to/3XyZ1vA", onde_comprar_equipamento: "https://amzn.to/3VjW0xY" },
+            { id: 'traira', nome: "Tra铆ra", tag: 'geral', bacia: ["Geral","Rio Grande"], isca: "Frog, Lambari, Spinner", idealT: 23, h: "Crep煤sculo", prof: "Raso/Mato", p: "Vegeta莽茫o, Aguap茅s", vara: "20lb R谩pida", linha: "0.30mm Multi", onde_comprar_isca: "https://amzn.to/4etJz8e", onde_comprar_equipamento: "https://amzn.to/3ViM1qN" },
+            { id: 'mandi', nome: "Mandi", tag: 'couro', bacia: ["Geral","Rio Grande"], isca: "Minhoca, Queijo", idealT: 24, h: "Chuva/Noite", prof: "Fundo", p: "Areia/Lodo", vara: "12lb Leve", linha: "0.25mm Mono", onde_comprar_isca: "https://amzn.to/3VpQyVf", onde_comprar_equipamento: "https://amzn.to/3VmC2bZ" },
+            { id: 'tilapia', nome: "Til谩pia", tag: 'geral', bacia: ["Geral","Rio Grande"], isca: "Massa, Ra莽茫o, Minhoca", idealT: 25, h: "Manh茫/Tarde", prof: "1-3m", p: "Margens", vara: "10lb Leve", linha: "0.25mm Mono", onde_comprar_isca: "https://amzn.to/45pG1mS", onde_comprar_equipamento: "https://amzn.to/3VmC2bZ" },
+            { id: 'bagre', nome: "Bagre / Jundi谩", tag: 'couro', bacia: ["Geral","Rio Grande"], isca: "Minhoca, F铆gado", idealT: 22, h: "Noite/Chuva", prof: "Fundo", p: "Po莽os", vara: "14lb M茅dia", linha: "0.30mm Mono", onde_comprar_isca: "https://amzn.to/3VpQyVf", onde_comprar_equipamento: "https://amzn.to/3ViM1qN" },
+            { id: 'piranha', nome: "Piranha", tag: 'visual', bacia: ["Geral"], isca: "Carne, Sangue", idealT: 26, h: "Dia", prof: "Meia-谩gua", p: "Remansos", vara: "20lb Cabo A莽o", linha: "0.30mm Multi", onde_comprar_isca: "https://amzn.to/3XyZ1vA", onde_comprar_equipamento: "https://amzn.to/3VjW0xY" },
+            // === GRANDES REPRESAS E RIO GRANDE (S贸 aparece se o rio for grande) ===
+            { id: 'dourado', nome: "Dourado", tag: 'rio_grande', bacia: ["Rio Grande","Paran谩"], isca: "Tuvira, Artificial", idealT: 24, h: "Sol forte", prof: "Corredeira", p: "Pedreiras", vara: "40lb R谩pida", linha: "0.40mm Multi", onde_comprar_isca: "https://amzn.to/4eVgP0i", onde_comprar_equipamento: "https://amzn.to/3ViM1qN" },
+            { id: 'pintado', nome: "Pintado / Surubim", tag: 'rio_grande', bacia: ["Rio Grande","Paran谩","S茫o Francisco"], isca: "Tuvira, Minhocu莽u", idealT: 25, h: "Noite", prof: "Fundo", p: "Po莽os fundos", vara: "50lb Pesada", linha: "0.50mm Mono", onde_comprar_isca: "https://amzn.to/3VpQyVf", onde_comprar_equipamento: "https://amzn.to/3VmC2bZ" },
+            { id: 'piapara', nome: "Piapara", tag: 'rio_grande', bacia: ["Rio Grande","Paran谩"], isca: "Milho, Caranguejo", idealT: 23, h: "Dia", prof: "Fundo", p: "Cevas", vara: "17lb Sens铆vel", linha: "0.30mm Mono", onde_comprar_isca: "https://amzn.to/45pG1mS", onde_comprar_equipamento: "https://amzn.to/3VmC2bZ" },
+            { id: 'pacu', nome: "Pacu", tag: 'rio_grande', bacia: ["Rio Grande","Paran谩"], isca: "Coquinho, Massa", idealT: 25, h: "Dia", prof: "Fundo", p: "Embaixo de 谩rvores", vara: "25lb M茅dia", linha: "0.40mm Mono", onde_comprar_isca: "https://amzn.to/45pG1mS", onde_comprar_equipamento: "https://amzn.to/3VjW0xY" },
+            // === TUCUNAR脡S (S贸 em Represas) ===
+            { id: 'tucunare_azul', nome: "Tucunar茅 Azul", tag: 'represa', bacia: ["Rio Grande","Paran谩"], isca: "Zara, Stick", idealT: 27, h: "Sol a pino", prof: "0.5-3m", p: "Galhadas", vara: "20lb R谩pida", linha: "0.28mm Multi", onde_comprar_isca: "https://amzn.to/3XyZ1vA", onde_comprar_equipamento: "https://amzn.to/3VjW0xY" },
+            { id: 'tucunare_amarelo', nome: "Tucunar茅 Amarelo", tag: 'represa', bacia: ["Rio Grande","Paran谩"], isca: "Spinner, Jig", idealT: 24, h: "Dia", prof: "Raso", p: "Margens", vara: "14lb R谩pida", linha: "0.20mm Multi", onde_comprar_isca: "https://amzn.to/3VpQyVf", onde_comprar_equipamento: "https://amzn.to/3VmC2bZ" },
+            // === OUTROS ===
+            { id: 'curimata', nome: "Curimat茫", tag: 'geral', bacia: ["S茫o Francisco"], isca: "Massa doce", idealT: 26, h: "Dia", prof: "Fundo", p: "Po莽os", vara: "25lb M茅dia", linha: "0.40mm Mono", onde_comprar_isca: "https://amzn.to/45pG1mS", onde_comprar_equipamento: "https://amzn.to/3ViM1qN" },
+            { id: 'tambaqui', nome: "Tambaqui", tag: 'geral', bacia: ["Amazonas"], isca: "Salsicha, Frutas", idealT: 28, h: "Dia", prof: "Superf铆cie", p: "Lagos", vara: "40lb Pesada", linha: "0.50mm Mono", onde_comprar_isca: "https://amzn.to/4eVgP0i", onde_comprar_equipamento: "https://amzn.to/3VjW0xY" },
+        ];
+
+
+        // --- L脫GICA DA GAVETA ---
+        const drawer = document.getElementById('painel');
+        const scrollContent = document.getElementById('scroll-content');
+        const handle = document.getElementById('drawer-handle');
+        let startY = 0, startH = 0, isDragging = false;
+        const minH = 230, maxH = window.innerHeight * 0.94;
+
+        const getClientY = (e) => e.touches ? e.touches[0].clientY : e.clientY;
+
+        const startDrag = (e) => {
+            // Previne o drag do mapa quando o scroll content n茫o est谩 no topo E a gaveta est谩 aberta
+            if (drawer.offsetHeight >= maxH - 10 && scrollContent.scrollTop > 0 && e.target !== handle && !handle.contains(e.target)) {
+                return;
+            }
+            startY = getClientY(e);
+            startH = drawer.offsetHeight;
+            isDragging = true;
+            drawer.classList.add('dragging');
+        };
+
+        const onDrag = (e) => {
+            if (!isDragging) return;
+
+            const clientY = getClientY(e);
+            const deltaY = startY - clientY;
+
+            // Se a gaveta est谩 no topo e o usu谩rio tenta arrastar para cima, ou o conte煤do interno n茫o est谩 no topo, 
+            // permite o scroll do conte煤do interno.
+            if (drawer.offsetHeight >= maxH - 10 && deltaY > 0 && scrollContent.scrollTop > 0) {
+                 return;
+            }
+
+
+            let newH = startH + deltaY;
+
+            // Elasticidade superior
+            if (newH > maxH) newH = maxH + (newH - maxH) * 0.1;
+            // Elasticidade inferior
+            if (newH < minH) newH = minH - (minH - newH) * 0.2;
+
+
+            drawer.style.height = `${newH}px`;
+            
+            // Previne o scroll da p谩gina principal ao arrastar a gaveta
+            if (e.cancelable && e.type === 'touchmove') e.preventDefault();
+        };
+
+        const endDrag = () => {
+            isDragging = false;
+            drawer.classList.remove('dragging');
+
+            if (drawer.offsetHeight > minH + 100) { // Se arrastou o suficiente para abrir
+                drawer.style.height = `${maxH}px`;
+                drawer.classList.add('open');
+            } else { // Fecha a gaveta
+                drawer.style.height = `${minH}px`;
+                drawer.classList.remove('open');
+                scrollContent.scrollTop = 0; // Garante que o scroll do conte煤do interno volte ao topo ao fechar
+            }
+        };
+
+        // Eventos para desktop e mobile
+        drawer.addEventListener('touchstart', startDrag, { passive: true });
+        window.addEventListener('touchmove', onDrag, { passive: false });
+        window.addEventListener('touchend', endDrag);
+
+        drawer.addEventListener('mousedown', startDrag);
+        window.addEventListener('mousemove', onDrag);
+        window.addEventListener('mouseup', endDrag);
+
+        // --- L脫GICA DO RADAR ---
+        function getMoonData() {
+            const lp = 2551443; // Per铆odo de um m锚s lunar em segundos (aprox. 29.53 dias)
+            const now = new Date();
+            // Nova lua de refer锚ncia (Jan 7, 1970 20:35:00 UTC)
+            const new_moon = new Date(1970, 0, 7, 20, 35, 0); 
+            const phase = ((now.getTime() - new_moon.getTime()) / 1000) % lp;
+            const age = Math.floor(phase / (24 * 3600)) + 1; // Idade da lua em dias
+
+            if (age <= 3) return {n: "Nova", i: "馃寫"};
+            if (age <= 10) return {n: "Crescente", i: "馃寭"};
+            if (age <= 17) return {n: "Cheia", i: "馃寱"};
+            return {n: "Minguante", i: "馃寳"};
         }
-    });
 
-    // Failsafe: Fecha splash em 3s se travar
-    window.onload = () => { 
-      iniciarGPS(); 
-      setTimeout(fecharSplash, 3000); 
-    };
-  </script>
+        function getWeatherIcon(code) {
+            // C贸digos Open-Meteo para Clima (simplificado)
+            if(code <= 3) return "鈽€锔�"; // C茅u limpo a parcialmente nublado
+            if(code <= 67) return "馃導锔�"; // Chuva leve a moderada
+            if(code >= 95) return "鉀堬笍"; // Tempestades
+            return "鈽侊笍"; // Nublado
+        }
+
+        async function detectarRioProximo(lat, lon) {
+            document.getElementById('lbl-rio').innerText = "Analisando corpos d'谩gua...";
+            // Raio curto (3km) para precis茫o de Rio Pequeno
+            const query = `[out:json];(way["waterway"="river"](around:3000,${lat},${lon});way["waterway"="canal"](around:3000,${lat},${lon});relation["water"="lake"](around:3000,${lat},${lon});relation["water"="reservoir"](around:3000,${lat},${lon}););out tags center;`;
+            try {
+                const response = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                if (data.elements && data.elements.length > 0) {
+                    const namedBody = data.elements.find(e => e.tags.name);
+                    return namedBody ? namedBody.tags.name : null;
+                }
+                return null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function rodarRadar(coords, preLoadedAddress = null) {
+            // Evita rodar o radar se a mudan莽a de coordenada for muito pequena (e n茫o for busca manual)
+            if (!preLoadedAddress && Math.abs(coords.lat - lastCoords.lat) < 0.005 && Math.abs(coords.lng - lastCoords.lng) < 0.005) {
+                return;
+            }
+            lastCoords = coords;
+
+            try {
+                let addr = preLoadedAddress;
+
+                // --- PARALELISMO PARA OTIMIZAR ---
+                const fetchGeo = async () => {
+                    if (addr) return addr; // Se j谩 tem endere莽o (de busca manual), n茫o consulta de novo
+                    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}`).then(r => r.json());
+                    return r.address || {};
+                };
+                const fetchWeather = fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,precipitation,weathercode&timezone=auto`).then(r => r.json());
+                const fetchRiver = detectarRioProximo(coords.lat, coords.lng);
+
+                const [geoData, resW, nomeRio] = await Promise.all([fetchGeo(), fetchWeather, fetchRiver]);
+                addr = geoData; // Atualiza 'addr' com o resultado de geoData
+
+                const fullAddr = JSON.stringify(addr).toLowerCase();
+                const uf = UF_MAP[addr.state] || "BR";
+                const cid = addr.city || addr.town || addr.village || addr.municipality || "Local Remoto";
+
+                document.getElementById('lbl-cidade').innerText = `馃搷 ${cid}-${uf}`;
+
+                // === L脫GICA DE BACIA ===
+                let bacia = "Geral";
+                if (uf === "MG") {
+                    // SUL DE MG 脡 RIO GRANDE, N脙O PARAN脕 GEN脡RICO
+                    if (coords.lat < -18.5 && coords.lng > -48) bacia = "Rio Grande";
+                    else if (coords.lng < -48) bacia = "Paran谩"; // Tri芒ngulo Mineiro
+                    else bacia = "S茫o Francisco";
+                } else if (["SP"].includes(uf)) bacia = "Rio Grande"; // Norte de SP (regi茫o do Rio Grande)
+                else if (["MS","PR","SC","RS"].includes(uf)) bacia = "Paran谩";
+                else if (["BA","PE","AL","SE","CE","MA","PB","PI","RN"].includes(uf)) bacia = "S茫o Francisco"; // Incluindo mais estados do NE
+                else if (fullAddr.includes("amazon") || ["AM","PA","RO","RR","AC","AP","TO"].includes(uf)) bacia = "Amazonas"; // Incluindo mais estados do Norte
+                
+                document.getElementById('badge-bacia').innerText = `BACIA: ${bacia.toUpperCase()}`;
+
+
+                // === FILTRO DE AMBIENTE ===
+                let isRepresa = false;
+                let isRioGrande = false;
+                if (nomeRio) {
+                    document.getElementById('lbl-rio').innerText = `馃搷 Pr贸ximo ao: ${nomeRio}`;
+                    const rioUp = nomeRio.toUpperCase();
+                    if (rioUp.includes("REPRESA") || rioUp.includes("LAGO") || rioUp.includes("BARRAGEM") || rioUp.includes("FURNAS") || rioUp.includes("PEIXOTO")) isRepresa = true;
+                    // Se for o Rio Grandez茫o mesmo, ativa os peixes grandes
+                    if (rioUp === "RIO GRANDE" || rioUp.includes("RIO GRANDE")) isRioGrande = true;
+                    // Corre莽茫o de Bacia baseada no rio
+                    if (rioUp.includes("S脙O FRANCISCO")) bacia = "S茫o Francisco";
+                } else {
+                    document.getElementById('lbl-rio').innerText = "";
+                }
+
+                const cur = resW.current;
+                const moon = getMoonData();
+                const wIcon = getWeatherIcon(cur.weathercode);
+
+                document.getElementById('val-temp').innerHTML = `${wIcon} ${Math.round(cur.temperature_2m)}掳C`;
+                document.getElementById('val-vento').innerText = `${Math.round(cur.wind_speed_10m)} km/h`;
+                document.getElementById('val-press').innerText = `${Math.round(cur.surface_pressure)} hPa`;
+                document.getElementById('val-lua').innerText = `${moon.i} ${moon.n}`;
+                document.getElementById('val-hum').innerText = `${cur.relative_humidity_2m}%`;
+                document.getElementById('val-rain').innerText = `${cur.precipitation} mm`;
+
+                const top3C = document.getElementById('container-top3');
+                const listC = document.getElementById('lista-detalhada');
+                top3C.innerHTML = '';
+                listC.innerHTML = '';
+
+                const sortedFish = PEIXES_DB.filter(p => {
+                    const naBacia = p.bacia.includes(bacia) || p.bacia.includes("Geral");
+                    return naBacia;
+                })
+                .map(p => {
+                    let score = 80; // Pontua莽茫o base
+                    
+                    // --- CORRE脟脙O DE FILTRAGEM CR脥TICA: Se a condi莽茫o 茅 MANDAT脫RIA e n茫o atendida, score = 0 ---
+                    // 1. Tucunar茅: EXIGE Represa
+                    if (p.tag === 'represa') {
+                        if (!isRepresa) {
+                            return { ...p, score: 0 }; // Se n茫o 茅 represa, o score 茅 zero para o tucunar茅
+                        }
+                    }
+                    // 2. Dourado/Pintado/Pacu/Piapara: EXIGE Rio Grande (o principal) ou Represa
+                    if (p.tag === 'rio_grande') {
+                        if (!(isRioGrande || isRepresa)) {
+                            return { ...p, score: 0 }; // Se n茫o 茅 rio grande ou represa, score 茅 zero
+                        }
+                    }
+
+                    // Penaliza por diferen莽a de temperatura ideal
+                    score -= Math.abs(cur.temperature_2m - p.idealT) * 4;
+
+                    const isRaining = cur.precipitation > 0.5;
+                    const isSunny = cur.weathercode <= 3 && !isRaining;
+
+                    // --- REGRAS ESPEC脥FICAS (B么nus/Penalidades que n茫o zeram o score, mas ajustam) ---
+                    
+                    // 3. Peixes de Rio Pequeno (Inga铆): B么nus se n茫o for represa nem rio grande
+                    if (!isRepresa && !isRioGrande && ["lambari", "traira", "mandi", "bagre", "tilapia", "piranha"].includes(p.id)) {
+                        score += 15;
+                    }
+                    // B么nus/Penalidade por Chuva
+                    if (isRaining) {
+                        if (p.tag === 'couro') score += 15; // Peixes de couro gostam de chuva
+                        if (p.tag === 'visual') score -= 10; // Peixes visuais ficam menos ativos
+                    } else if (isSunny) { // B么nus por Sol (para peixes visuais)
+                        if (p.tag === 'visual') score += 5;
+                    }
+
+                    // B么nus por Lua Cheia
+                    if(moon.n === "Cheia") score += 5;
+                    
+                    return {...p, score: Math.min(100, Math.max(0, Math.round(score)))}; // Garante score entre 0 e 100
+                }).sort((a,b) => b.score - a.score);
+
+
+                // Filtra pontua莽茫o muito baixa (peixes nada a ver)
+                // Agora, com as penalidades de score=0, esta linha garante que n茫o aparecem
+                const visibleFish = sortedFish.filter(p => p.score > 0); // Ajustado para > 0 para ser mais rigoroso
+
+                // --- TOP 3 CHIPS ---
+                visibleFish.slice(0,3).forEach(p => {
+                    top3C.innerHTML += `<div class="fish-chip">
+                        <div class="score-dot" style="background:${p.score > 70 ? '#10b981' : '#f59e0b'}"></div>
+                        ${p.nome}
+                    </div>`;
+                });
+
+                // --- LISTA DETALHADA ---
+                if(visibleFish.length === 0) {
+                    listC.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">Condi莽玫es dif铆ceis para pesca nesta localiza莽茫o. Tente mover o mapa ou buscar outro lugar.</div>';
+                } else {
+                    visibleFish.forEach(p => {
+                        const matchColor = p.score > 80 ? '#dcfce7' : (p.score > 50 ? '#fef3c7' : '#fee2e2');
+                        const matchTextC = p.score > 80 ? '#166534' : (p.score > 50 ? '#92400e' : '#991b1b');
+                        
+                        listC.innerHTML += `<div class="fish-card">
+                            <div class="card-header">
+                                <span class="fish-name">${p.nome}</span>
+                                <span class="match-tag" style="background:${matchColor}; color:${matchTextC};"> CHANCE: ${p.score}% </span>
+                            </div>
+                            <div class="tech-grid">
+                                <div class="tech-item gold" style="grid-column: span 2;">
+                                    <span class="tech-lbl">馃幆 Isca Matadeira</span>
+                                    <span class="tech-val">${p.isca} ${p.onde_comprar_isca ? `<a href="${p.onde_comprar_isca}" target="_blank">(Onde comprar)</a>` : ''}</span>
+                                </div>
+                                <div class="tech-item"><span class="tech-lbl">鈴� Hor谩rio</span><span class="tech-val">${p.h}</span></div>
+                                <div class="tech-item"><span class="tech-lbl">馃寠 Profundidade</span><span class="tech-val">${p.prof}</span></div>
+                                <div class="tech-item"><span class="tech-lbl">馃帲 Equipamento</span><span class="tech-val">${p.vara} ${p.onde_comprar_equipamento ? `<a href="${p.onde_comprar_equipamento}" target="_blank">(Onde comprar)</a>` : ''}</span></div>
+                                <div class="tech-item"><span class="tech-lbl">馃У Linha/Leader</span><span class="tech-val">${p.linha}</span></div>
+                            </div>
+                        </div>`;
+                    });
+                }
+
+
+            } catch (e) {
+                console.error(e);
+                // Exibir mensagem de erro mais amig谩vel na UI
+                document.getElementById('lbl-cidade').innerText = "Erro ao carregar dados.";
+                listC.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">Ocorreu um erro ao carregar as informa莽玫es. Verifique sua conex茫o.</div>';
+            } finally {
+                fecharSplash();
+            }
+        }
+
+        function fecharSplash() {
+            const s = document.getElementById('splash');
+            if(s && s.style.opacity !== '0') { // Garante que s贸 fade out se ainda estiver vis铆vel
+                s.style.opacity = '0';
+                setTimeout(() => s.style.display = 'none', 800); // Esconde totalmente ap贸s a transi莽茫o
+            }
+        }
+
+        function iniciarGPS() {
+            const btn = document.getElementById('gps-btn');
+            btn.classList.add('loading');
+            const gpsOptions = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    btn.classList.remove('loading');
+                    const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    map.setView([c.lat, c.lng], 13);
+                    rodarRadar(c);
+                },
+                (err) => {
+                    btn.classList.remove('loading');
+                    rodarRadar(map.getCenter()); // Se o GPS falhar, usa o centro atual do mapa
+                    fecharSplash(); // Garante que a splash screen feche mesmo com erro de GPS
+                    if(err.code === 1) {
+                        alert("Permiss茫o de localiza莽茫o negada. Ative a localiza莽茫o do celular para o Radar funcionar.");
+                    } else {
+                        alert("N茫o foi poss铆vel obter a localiza莽茫o. Tente novamente.");
+                    }
+                    console.error("Erro de Geolocaliza莽茫o:", err);
+                },
+                gpsOptions
+            );
+        }
+
+        function buscarManual() {
+            const q = document.getElementById('search-input').value;
+            if(!q) return;
+
+            const btn = document.querySelector('.search-box button');
+            btn.innerText = '...';
+            document.getElementById('lbl-cidade').innerText = '馃搷 Carregando...';
+
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}, Brazil&addressdetails=1`).then(r => r.json()).then(data => {
+                btn.innerText = 'IR';
+                if(data[0]) {
+                    const c = {lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon)};
+                    map.setView([c.lat, c.lng], 12); // Centraliza o mapa na localiza莽茫o buscada
+                    rodarRadar(c, data[0].address); // Passa o endere莽o j谩 carregado para evitar nova consulta
+                } else {
+                    alert("Localiza莽茫o n茫o encontrada. Tente um nome mais espec铆fico.");
+                    document.getElementById('lbl-cidade').innerText = '馃搷 Local n茫o encontrado';
+                }
+            }).catch(e => {
+                btn.innerText = 'IR';
+                alert("Erro ao buscar localiza莽茫o. Tente novamente.");
+                document.getElementById('lbl-cidade').innerText = '馃搷 Erro na busca';
+                console.error("Erro na busca manual:", e);
+            });
+        }
+        
+        // --- INICIALIZA脟脙O ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicializa o mapa ap贸s a splash screen
+            setTimeout(() => {
+                fecharSplash(); // Garante que a splash screen feche
+                initMapAndRadar();
+            }, 3000); // Exibe a splash por 3 segundos
+        });
+
+        function initMapAndRadar() {
+            // Garante que o mapa 茅 inicializado apenas uma vez
+            // Nota: L.map retorna uma inst芒ncia, n茫o um boolean. Verificar se a vari谩vel map j谩 foi atribu铆da.
+            if (!map._container._leaflet_id) { // Verifica se o mapa ainda n茫o foi inicializado
+                map.on('moveend', () => {
+                    const center = map.getCenter();
+                    rodarRadar(center);
+                });
+                iniciarGPS(); // Tenta obter a localiza莽茫o do usu谩rio no in铆cio
+            }
+        }
+        
+        // --- Ajusta a altura inicial da gaveta e a l贸gica de resize ---
+        window.addEventListener('resize', () => {
+            const newMaxH = window.innerHeight * 0.94;
+            // Recalcula minH e maxH ao redimensionar a janela
+            const minH = 230; // Garante que minH 茅 constante ou recalculado se for din芒mico
+            // A vari谩vel maxH no escopo da fun莽茫o initMapAndRadar tamb茅m precisa ser atualizada.
+            // Para simplificar, as vari谩veis globais minH e maxH devem ser usadas e atualizadas.
+
+            if (drawer.classList.contains('open')) {
+                drawer.style.height = `${newMaxH}px`;
+            } else {
+                drawer.style.height = `${minH}px`;
+            }
+        });
+
+    </script>
 </body>
-</html>
+  </html>
