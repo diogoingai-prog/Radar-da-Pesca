@@ -44,19 +44,18 @@
       height: 230px; max-height: 94vh;
       transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1); 
       display: flex; flex-direction: column; overflow: hidden;
-      touch-action: none;
     }
     .drawer.open { height: 94vh; }
     .drawer.dragging { transition: none; }
-    .handle { height: 32px; width: 100%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: grab; }
-    .handle-bar { width: 45px; height: 5px; background: #e2e8f0; border-radius: 10px; }
+    
+    .handle { height: 40px; width: 100%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: grab; background: #fff; border-bottom: 1px solid #f1f5f9; touch-action: none; }
+    .handle-bar { width: 50px; height: 6px; background: #cbd5e1; border-radius: 10px; }
 
     /* CONTEÚDO DA GAVETA */
-    .summary { padding: 0 20px 10px 20px; flex-shrink: 0; }
+    .summary { padding: 10px 20px; flex-shrink: 0; }
     .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
     .status-badge { font-size: 9px; font-weight: 800; color: var(--status-red); text-transform: uppercase; display: flex; align-items: center; gap: 4px; }
-    .bacia-badge { font-size: 8px; font-weight: 900; background: #334155; color: #fff; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-
+    
     .city-label { font-size: 20px; font-weight: 800; color: #0f172a; margin: 0 0 10px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .river-tag { font-size: 10px; color: #0891b2; font-weight: 700; display: block; margin-top: -5px; margin-bottom: 10px; text-transform: uppercase; }
 
@@ -121,8 +120,7 @@
     <div class="summary" id="drawer-summary">
       <div class="header-row">
         <div class="status-badge"><span class="material-icons" style="font-size:12px;">sensors</span> RADAR ONLINE</div>
-        <div id="badge-bacia" class="bacia-badge">BACIA: GERAL</div>
-      </div>
+        </div>
       <h2 class="city-label" id="lbl-cidade">📍 Aguardando...</h2>
       <span id="lbl-rio" class="river-tag"></span>
       
@@ -137,7 +135,7 @@
       <div class="top3-row" id="container-top3"></div>
     </div>
     
-    <div class="details-title">Estratégia Recomendada (Top Picks)</div>
+    <div class="details-title">Estratégia Recomendada</div>
     
     <div class="scroll-area" id="scroll-content">
       <div class="ad-slot">Publicidade Google AdSense</div>
@@ -151,20 +149,21 @@
     const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([-15.7, -47.9], 5);
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}').addTo(map);
 
+    // --- CORREÇÃO: DETECTAR ARRASTO DO MAPA ---
+    map.on('moveend', () => {
+        const c = map.getCenter();
+        rodarRadar({ lat: c.lat, lng: c.lng });
+    });
+
     let lastCoords = { lat: 0, lng: 0 };
     const UF_MAP = {"Acre":"AC","Alagoas":"AL","Amapá":"AP","Amazonas":"AM","Bahia":"BA","Ceará":"CE","Distrito Federal":"DF","Espírito Santo":"ES","Goiás":"GO","Maranhão":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Pará":"PA","Paraíba":"PB","Paraná":"PR","Pernambuco":"PE","Piauí":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rondônia":"RO","Roraima":"RR","Santa Catarina":"SC","São Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
 
-    // === BANCO DE DADOS DETALHADO (Versão Mestre) ===
+    // === BANCO DE DADOS (SEM LAMBARI) ===
     const PEIXES_DB = [
-      { 
-        id: 'lambari', nome: "Lambari", tag: 'geral', bacia: ["Geral","Rio Grande"], isca: "Massinha, Mosca, Pão", idealT: 22, h: "Dia todo", prof: "Raso", 
-        equip: "Vara Telescópica 3,6m a 4,5m (Bambu/Fibra)", linha: "0.15mm a 0.20mm (Mono)", 
-        chumbo: "Chumbada Arroz (bem leve)", anzol: "Mosquito (nº 12 a 16)" 
-      },
       { 
         id: 'traira', nome: "Traíra", tag: 'geral', bacia: ["Geral","Rio Grande"], isca: "Frog, Lambari, Spinner", idealT: 23, h: "Crepúsculo", prof: "Raso/Mato", 
         equip: "Vara 17lb (5'6\") + Molinete 2000", linha: "Multi 0.25mm + Leader", 
-        chumbo: "Sem peso (Artificial) ou Oliva 5g (Vivo)", anzol: "Offset 3/0 ou Garatéia" 
+        chumbo: "Sem peso (Artificial) ou Oliva 5g", anzol: "Offset 3/0 ou Garatéia" 
       },
       { 
         id: 'tilapia', nome: "Tilápia", tag: 'geral', bacia: ["Geral","Rio Grande"], isca: "Massa, Ração, Minhoca", idealT: 25, h: "Manhã/Tarde", prof: "1-3m", 
@@ -189,7 +188,7 @@
       { 
         id: 'dourado', nome: "Dourado", tag: 'rio_grande', bacia: ["Rio Grande","Paraná"], isca: "Tuvira, Artificial", idealT: 24, h: "Sol forte", prof: "Corredeira", 
         equip: "Vara 40lb Ação Rápida + Carretilha", linha: "0.40mm (Multi) + Cabo Aço", 
-        chumbo: "Sem peso (Artificial) ou Oliva (Vivo)", anzol: "7/0 ou Garatéia 4x" 
+        chumbo: "Sem peso (Artificial) ou Oliva", anzol: "7/0 ou Garatéia 4x" 
       },
       { 
         id: 'tucunare_azul', nome: "Tucunaré Azul", tag: 'represa', bacia: ["Rio Grande","Paraná","Tocantins"], isca: "Zara, Stick", idealT: 27, h: "Sol a pino", prof: "0.5-3m", 
@@ -245,15 +244,14 @@
 
         const [geoData, resW, nomeRio] = await Promise.all([fetchGeo(), fetchWeather, fetchRiver]);
         addr = geoData;
-        const uf = UF_MAP[addr.state] || "BR"; const cid = addr.city || addr.town || addr.village || "Local";
+        const uf = UF_MAP[addr.state] || "BR"; 
+        const cid = addr.city || addr.town || addr.village || addr.municipality || "Local Remoto";
         document.getElementById('lbl-cidade').innerText = `📍 ${cid}-${uf}`;
 
         let bacia = "Geral";
         if (uf === "MG") { bacia = (coords.lat < -18.5 && coords.lon > -48) ? "Rio Grande" : ((coords.lon < -48) ? "Paraná" : "São Francisco"); }
         else if (["SP"].includes(uf)) bacia = "Rio Grande"; else if (["MS","PR","SC","RS"].includes(uf)) bacia = "Paraná"; else if (["BA","PE","AL","SE"].includes(uf)) bacia = "São Francisco"; else if (JSON.stringify(addr).toLowerCase().includes("amazon") || ["AM","PA","RO"].includes(uf)) bacia = "Amazonas";
         
-        document.getElementById('badge-bacia').innerText = `BACIA: ${bacia.toUpperCase()}`;
-
         let isRepresa = false, isRioGrande = false;
         if (nomeRio) {
           document.getElementById('lbl-rio').innerText = `📍 Próximo ao: ${nomeRio}`;
@@ -261,7 +259,10 @@
           if (rioUp.includes("REPRESA") || rioUp.includes("LAGO") || rioUp.includes("BARRAGEM")) isRepresa = true;
           if (rioUp.includes("RIO GRANDE")) isRioGrande = true;
           if (rioUp.includes("SÃO FRANCISCO")) bacia = "São Francisco";
+          if (rioUp.includes("INGAÍ")) bacia = "Rio Grande"; 
         } else { document.getElementById('lbl-rio').innerText = ""; }
+
+        // REMOVIDO: Badge visual da Bacia
 
         const cur = resW.current; const moon = getMoonData();
         document.getElementById('val-temp').innerHTML = `${getWeatherIcon(cur.weathercode)} ${Math.round(cur.temperature_2m)}°C`;
@@ -280,24 +281,21 @@
           let score = 80 - Math.abs(cur.temperature_2m - p.idealT) * 4;
           if (p.tag === 'represa') score += isRepresa ? 20 : -100;
           if (p.tag === 'rio_grande') score += (isRioGrande || isRepresa) ? 10 : -40;
-          if (!isRepresa && !isRioGrande && ["lambari", "traira", "mandi", "bagre", "tilapia"].includes(p.id)) score += 15;
+          if (!isRepresa && !isRioGrande && ["traira", "mandi", "bagre", "tilapia"].includes(p.id)) score += 15;
           if (cur.precipitation > 0.5) { if (p.tag === 'couro') score += 15; if (p.tag === 'visual') score -= 10; }
           else if (cur.weathercode <= 3) { if (p.tag === 'visual') score += 5; }
           if(moon.n === "Cheia") score += 5;
           return {...p, score: Math.min(100, Math.max(0, Math.round(score)))};
         }).sort((a,b) => b.score - a.score);
 
-        // FILTRO RIGOROSO: Só mostra na lista se o score for > 50 (Alta probabilidade)
         const visibleFish = sortedFish.filter(p => p.score > 50);
 
-        // TOP 3 CHIPS
         visibleFish.slice(0,3).forEach(p => {
           top3C.innerHTML += `<div class="fish-chip"><div class="score-dot" style="background:${p.score > 70 ? '#10b981' : '#f59e0b'}"></div>${p.nome}</div>`;
         });
 
-        // LISTA DETALHADA
         if(visibleFish.length === 0) {
-            listC.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">Condições difíceis. Tente lambari ou tilápia na margem.</div>';
+            listC.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">Condições difíceis. Tente tilápia na margem.</div>';
         } else {
             visibleFish.forEach(p => {
               const matchColor = p.score > 80 ? '#dcfce7' : '#fef3c7';
