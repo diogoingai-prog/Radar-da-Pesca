@@ -55,7 +55,6 @@
     .summary { padding: 0 20px 10px 20px; flex-shrink: 0; }
     .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
     .status-badge { font-size: 9px; font-weight: 800; color: var(--status-red); text-transform: uppercase; display: flex; align-items: center; gap: 4px; }
-    /* REMOVIDO: .water-badge */
     
     .city-label { font-size: 20px; font-weight: 800; color: #0f172a; margin: 0 0 10px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -114,7 +113,7 @@
       </svg>
     </div>
     <h1 class="splash-title">RADAR DA PESCA</h1>
-    <p class="splash-sub">Calibrando sensores hidrostáticos...</p>
+    <p class="splash-sub">Ajustando precisão do satélite...</p>
   </div>
 
   <div class="top-bar">
@@ -136,7 +135,7 @@
     <div class="summary" id="drawer-summary">
       <div class="header-row">
         <div class="status-badge"><span class="material-icons" style="font-size:12px;">sensors</span> RADAR ATIVO</div>
-        </div>
+      </div>
       <h2 class="city-label" id="lbl-cidade">📍 Aguardando satélite...</h2>
       
       <div class="env-grid">
@@ -173,12 +172,11 @@
 
     let lastCoords = { lat: 0, lng: 0 };
     
-    // Mapeamento de Estados expandido
+    // Mapeamento de Estados
     const UF_MAP = {"Acre":"AC","Alagoas":"AL","Amapá":"AP","Amazonas":"AM","Bahia":"BA","Ceará":"CE","Distrito Federal":"DF","Espírito Santo":"ES","Goiás":"GO","Maranhão":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Pará":"PA","Paraíba":"PB","Paraná":"PR","Pernambuco":"PE","Piauí":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rondônia":"RO","Roraima":"RR","Santa Catarina":"SC","São Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
 
-    // Base de Dados de Peixes (LISTA COMPLETA 38 PEIXES)
+    // Base de Dados de Peixes (LISTA COMPLETA MANTIDA)
     const PEIXES_DB = [
-      // === BAGRES / COURO ===
       { id: 'pintado', nome: "Pintado / Surubim", bacia: ["Paraná","São Francisco","Geral"], isca: "Tuvira, Minhocuçu, Pedaços", idealT: 25, h: "Noite/Madrugada", prof: "Fundo", p: "Poços fundos, Canais", vara: "50lb Pesada", linha: "0.50mm Mono" },
       { id: 'cachara', nome: "Cachara", bacia: ["Amazonas","Geral","Paraná"], isca: "Tuvira, Lambari, Iscas Artificiais", idealT: 26, h: "Crepúsculo", prof: "Meia-água/Fundo", p: "Barrancos, Estruturas", vara: "40lb Média-Pesada", linha: "0.45mm Mono" },
       { id: 'pirarara', nome: "Pirarara", bacia: ["Amazonas","Geral"], isca: "Cabeça de peixe, Carne, Queijo", idealT: 27, h: "Qualquer hora", prof: "Fundo", p: "Poços, Galhadas", vara: "80lb Pesada", linha: "0.70mm Mono" },
@@ -187,8 +185,6 @@
       { id: 'mandi', nome: "Mandi", bacia: ["Geral"], isca: "Minhoca, Queijo", idealT: 24, h: "Chuva/Noite", prof: "Fundo", p: "Areia/Lodo", vara: "12lb Leve", linha: "0.25mm Mono" },
       { id: 'piraiba', nome: "Piraíba", bacia: ["Amazonas"], isca: "Peixes inteiros", idealT: 27, h: "Dia/Noite", prof: "Canal do Rio", p: "Fundo", vara: "120lb Guincho", linha: "1.00mm Mono" },
       { id: 'barbado', nome: "Barbado", bacia: ["Paraná","Amazonas"], isca: "Pedaços de peixe, Tuvira", idealT: 25, h: "Dia/Noite", prof: "Fundo", p: "Poços, Canais", vara: "40lb Pesada", linha: "0.50mm Mono" },
-
-      // === ESCAMA / PREDADORES ===
       { id: 'dourado', nome: "Dourado", bacia: ["Paraná","São Francisco","Geral"], isca: "Tuvira, Isca Artificial", idealT: 24, h: "Sol forte", prof: "Corredeira", p: "Pedreiras, Corredeiras", vara: "40lb Rápida", linha: "0.40mm Multi" },
       { id: 'tucunare_azul', nome: "Tucunaré Azul", bacia: ["Paraná","Geral","Sudeste"], isca: "Zara, Stick, Jig", idealT: 27, h: "Sol a pino", prof: "0.5-3m", p: "Galhadas, Estruturas", vara: "20lb Rápida", linha: "0.28mm Multi" },
       { id: 'tucunare_amarelo', nome: "Tucunaré Amarelo", bacia: ["Geral","Sudeste"], isca: "Spinner, Lambari, Jig", idealT: 24, h: "Dia todo", prof: "Raso", p: "Margens, Capim", vara: "14lb Rápida", linha: "0.20mm Multi" },
@@ -206,8 +202,6 @@
       { id: 'blackbass', nome: "Black Bass", bacia: ["Sul","Sudeste"], isca: "Minhoca Artificial, Jig", idealT: 20, h: "Dia", prof: "Estruturas", p: "Troncos, Piers", vara: "14lb Rápida", linha: "0.25mm Fluor" },
       { id: 'truta', nome: "Truta Arco-Íris", bacia: ["Sul","Sudeste"], isca: "Fly, Spinners, Massa", idealT: 14, h: "Dia", prof: "Corredeira", p: "Água fria/limpa", vara: "Ultra Leve / Fly", linha: "0.18mm Mono" },
       { id: 'piranha', nome: "Piranha", bacia: ["Geral"], isca: "Carne, Sangue, Fígado", idealT: 26, h: "Dia", prof: "Meia-água", p: "Remansos, Cevas", vara: "20lb (Cabo Aço)", linha: "0.30mm Multi" },
-
-      // === REDONDOS / OUTROS ===
       { id: 'pacu', nome: "Pacu", bacia: ["Paraná","Geral"], isca: "Coquinho, Massa, Caranguejo", idealT: 25, h: "Dia", prof: "Meia/Fundo", p: "Embaixo de árvores", vara: "25lb Média", linha: "0.40mm Mono" },
       { id: 'tambaqui', nome: "Tambaqui", bacia: ["Amazonas","Geral"], isca: "Salsicha, Beijinho, Frutas", idealT: 28, h: "Dia todo", prof: "Superfície/Meia", p: "Lagos, Pesqueiros", vara: "40lb Pesada", linha: "0.50mm Mono" },
       { id: 'tambacu', nome: "Tambacu", bacia: ["Geral","Sudeste"], isca: "Ração, Massa, Salsicha", idealT: 24, h: "Dia", prof: "Fundo/Meia", p: "Pesqueiros", vara: "30lb Pesada", linha: "0.45mm Mono" },
@@ -222,7 +216,7 @@
       { id: 'corvina', nome: "Corvina", bacia: ["Amazonas","Paraná"], isca: "Camarão, Lambari, Jig", idealT: 24, h: "Dia/Noite", prof: "Fundo", p: "Poços, Estruturas", vara: "17lb Média", linha: "0.30mm Mono" }
     ];
 
-    // --- LÓGICA DA GAVETA (TOUCH + MOUSE) ---
+    // --- LÓGICA DA GAVETA ---
     const drawer = document.getElementById('painel');
     const scrollContent = document.getElementById('scroll-content');
     const handle = document.getElementById('drawer-handle');
@@ -319,8 +313,6 @@
         else if (fullAddr.includes("francisco") || ["MG","BA","PE","AL","SE"].includes(uf)) bacia = "São Francisco";
         else if (fullAddr.includes("parana") || fullAddr.includes("tiet") || ["MS","PR","SP","SC","RS","GO","DF","RJ","ES"].includes(uf)) bacia = "Paraná";
 
-        // NOTA: O badge visual foi removido, mas a lógica 'bacia' continua usada abaixo para o filtro.
-
         const cur = resW.current;
         const moon = getMoonData();
         const wIcon = getWeatherIcon(cur.weathercode);
@@ -401,17 +393,31 @@
       const btn = document.getElementById('gps-btn');
       btn.classList.add('loading');
       
-      navigator.geolocation.getCurrentPosition((pos) => {
-        btn.classList.remove('loading');
-        const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        map.flyTo([c.lat, c.lng], 13); 
-        rodarRadar(c);
-      }, (err) => { 
-        btn.classList.remove('loading');
-        // alert("GPS indisponível. Usando localização padrão."); // Alert removido para ser menos intrusivo
-        rodarRadar(map.getCenter());
-        fecharSplash(); 
-      }, { timeout: 10000 });
+      // CONFIGURAÇÃO TURBINADA DO GPS
+      const gpsOptions = {
+        enableHighAccuracy: true, // Força usar o GPS do celular (não só Wi-Fi)
+        timeout: 10000,           // Espera no máximo 10s
+        maximumAge: 0             // Não aceita localização velha cacheada
+      };
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          btn.classList.remove('loading');
+          const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          // setView é mais rápido que flyTo
+          map.setView([c.lat, c.lng], 13); 
+          rodarRadar(c);
+        }, 
+        (err) => { 
+          btn.classList.remove('loading');
+          // Se der erro, carrega o padrão sem travar
+          rodarRadar(map.getCenter());
+          fecharSplash();
+          // Se o erro for de permissão (code 1), avisa o usuário
+          if(err.code === 1) alert("Para o GPS funcionar, você precisa clicar em 'Permitir' ou ativar a localização no celular.");
+        }, 
+        gpsOptions
+      );
     }
     
     function buscarManual() {
