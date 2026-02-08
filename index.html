@@ -23,7 +23,7 @@
     #map { height: 100vh; width: 100vw; z-index: 1; background: #e5e7eb; }
     .crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; pointer-events: none; color: #0f172a; }
     
-    /* BARRA DE PESQUISA (Mobile Padrão) */
+    /* BARRA DE PESQUISA */
     .top-bar { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 2000; display: flex; justify-content: center; transition: all 0.3s; }
     .search-box { background: #fff; border-radius: 25px; padding: 12px 20px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); width: 100%; max-width: 500px; }
     .search-input { border: none; outline: none; width: 100%; font-size: 16px; color: #334155; }
@@ -31,7 +31,7 @@
     .gps-btn { position: absolute; bottom: 300px; right: 20px; z-index: 2500; background: #fff; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); color: var(--accent); cursor: pointer; transition: 0.3s; }
     .gps-btn.loading { animation: rot 1s linear infinite; }
 
-    /* GAVETA / PAINEL LATERAL */
+    /* GAVETA / PAINEL */
     .drawer { 
       position: absolute; z-index: 2000; 
       background: var(--card); 
@@ -40,35 +40,27 @@
       transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
     }
 
-    /* ESTILO MOBILE (GAVETA DE BAIXO) */
+    /* MOBILE */
     @media (max-width: 768px) {
-      .drawer {
-        bottom: 0; left: 0; right: 0;
-        border-radius: 24px 24px 0 0;
-        height: 280px; max-height: 90vh;
-      }
+      .drawer { bottom: 0; left: 0; right: 0; border-radius: 24px 24px 0 0; height: 280px; max-height: 90vh; }
       .drawer.open { height: 85vh; }
       .handle { display: flex; }
     }
 
-    /* ESTILO PC (BARRA LATERAL FIXA) */
+    /* DESKTOP */
     @media (min-width: 769px) {
-      .drawer {
-        top: 20px; bottom: 20px; left: 20px;
-        width: 380px; height: auto;
-        border-radius: 16px;
-      }
-      .handle { display: none !important; } /* Sem alça no PC */
-      .top-bar { left: 420px; justify-content: flex-start; } /* Move busca para direita */
+      .drawer { top: 20px; bottom: 20px; left: 20px; width: 380px; height: auto; border-radius: 16px; }
+      .handle { display: none !important; }
+      .top-bar { left: 420px; justify-content: flex-start; }
       .search-box { width: 300px; }
       .gps-btn { bottom: 30px; right: 30px; }
     }
     
-    /* ALÇA (Mobile Only) */
+    /* ALÇA */
     .handle { height: 35px; width: 100%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: grab; background: #fff; border-bottom: 1px solid #f1f5f9; touch-action: none; }
     .handle-bar { width: 40px; height: 5px; background: #cbd5e1; border-radius: 10px; }
 
-    /* CONTEÚDO PAINEL */
+    /* CONTEÚDO */
     .summary { padding: 15px 20px 10px 20px; flex-shrink: 0; }
     .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
     .status-badge { font-size: 10px; font-weight: 800; color: var(--green); display: flex; align-items: center; gap: 4px; }
@@ -90,24 +82,28 @@
     .list-title { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin: 10px 0; letter-spacing: 1px; border-top: 1px solid #f1f5f9; padding-top: 15px; }
 
     .fish-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 10px; transition: transform 0.1s; }
-    .fish-card:hover { border-color: var(--accent); }
     .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .f-name { font-size: 16px; font-weight: 800; color: #0f172a; }
     .f-score { font-size: 10px; font-weight: 700; background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 6px; }
     
-    .tech-info { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .tech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .info-box { background: #f8fafc; padding: 6px 8px; border-radius: 6px; }
     .ib-lbl { font-size: 8px; font-weight: 700; color: #64748b; display: block; margin-bottom: 2px; }
     .ib-val { font-size: 11px; font-weight: 600; color: #334155; line-height: 1.2; }
     
-    .ad-box { width: 100%; height: 80px; background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; color: #94a3b8; font-size: 10px; font-weight: 700; }
+    /* LINK AUTOMÁTICO (CLICÁVEL) */
+    .smart-link { color: var(--accent); text-decoration: none; border-bottom: 1px dashed var(--accent); cursor: pointer; }
+    .smart-link:hover { color: #0284c7; border-bottom-style: solid; }
+
+    /* ÁREA DE PROPAGANDA (ADSENSE) */
+    .ad-slot { width: 100%; height: 100px; background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; color: #94a3b8; font-size: 10px; font-weight: 700; letter-spacing: 1px; flex-direction: column; }
   </style>
 </head>
 <body>
 
   <div id="splash">
     <div class="loader"></div>
-    <div class="splash-txt">INICIANDO SISTEMA...</div>
+    <div class="splash-txt">CARREGANDO SISTEMA...</div>
   </div>
 
   <div class="top-bar">
@@ -146,10 +142,16 @@
     </div>
 
     <div class="content-area" id="scroll-content">
-      <div class="ad-box">PUBLICIDADE</div>
+      
+      <div class="ad-slot">
+        <span>PUBLICIDADE GOOGLE</span>
+        <span style="font-size:9px; font-weight:400; margin-top:5px;">(Insira seu código AdSense aqui)</span>
+      </div>
+
       <div class="list-title">Recomendações Completas</div>
       <div id="lista-peixes"></div>
-      <div style="text-align:center; padding:20px; color:#cbd5e1; font-size:9px;">V14.0 DESKTOP READY</div>
+      
+      <div class="footer-msg">Radar da Pesca • V15.0</div>
     </div>
   </div>
 
@@ -161,7 +163,7 @@
 
     let lastLat = 0, lastLng = 0;
     
-    // --- DATABASE ---
+    // --- BANCO DE DADOS LIMPO (Sem links manuais) ---
     const PEIXES_DB = [
       { id: 'traira', nome: "Traíra", tag: 'geral', bacia: ["Geral","Nordeste"], isca: "Frog, Artificial", idealT: 24, h: "Crepúsculo", prof: "Raso/Mato", equip: "Vara 17lb + Molinete", linha: "Multi 0.25mm", chumbo: "Sem peso", anzol: "Offset 3/0" },
       { id: 'tilapia', nome: "Tilápia", tag: 'geral', bacia: ["Geral","Nordeste"], isca: "Massa, Ração", idealT: 25, h: "Dia", prof: "1-3m", equip: "Vara Telescópica", linha: "0.25mm Mono", chumbo: "Arroz", anzol: "Chinu 4" },
@@ -182,7 +184,6 @@
     const handle = document.getElementById('drag-handle');
     let startY = 0, startH = 0;
 
-    // Só ativa arrasto no mobile
     if(window.innerWidth <= 768) {
         handle.addEventListener('touchstart', e => { startY = e.touches[0].clientY; startH = drawer.offsetHeight; });
         handle.addEventListener('touchmove', e => {
@@ -195,6 +196,12 @@
           else { drawer.classList.remove('open'); drawer.style.height = '280px'; }
         });
     }
+
+    // --- MAPA ---
+    map.on('moveend', () => {
+      const c = map.getCenter();
+      setTimeout(() => rodarRadar({ lat: c.lat, lng: c.lng }), 600);
+    });
 
     // --- LÓGICA PRINCIPAL ---
     async function rodarRadar(lat, lng, preAddr = null) {
@@ -225,14 +232,11 @@
 
         // 3. Bacia e Rio (Overpass)
         let bacia = "Geral";
-        let isRepresa = false, isRioGrande = false;
-
-        // Regras de Região
         if(["PI","MA","CE","RN","PB","PE","AL","SE","BA"].includes(uf)) bacia = "Nordeste";
         else if(uf === "MG") bacia = (lat < -18.5) ? "Paraná" : "São Francisco";
         else if(["SP","PR","MS"].includes(uf)) bacia = "Paraná";
         
-        if(bacia === "Nordeste") isRepresa = true; // Libera tucunaré no Nordeste
+        if(bacia === "Nordeste") isRepresa = true; 
 
         document.getElementById('badge-bacia').innerText = bacia.toUpperCase();
 
@@ -246,8 +250,9 @@
               const nome = corpo.tags.name;
               document.getElementById('lbl-rio').innerText = `Próximo: ${nome}`;
               const nUp = nome.toUpperCase();
-              if(nUp.includes("REPRESA") || nUp.includes("LAGO") || nUp.includes("AÇUDE")) isRepresa = true;
+              if(nUp.includes("REPRESA") || nUp.includes("LAGO") || nUp.includes("BARRAGEM") || nUp.includes("AÇUDE")) isRepresa = true;
               if(nUp.includes("RIO GRANDE") || nUp.includes("PARANÁ")) isRioGrande = true;
+              if(nUp.includes("PARNAÍBA")) bacia = "Nordeste";
             } else document.getElementById('lbl-rio').innerText = "Água detectada";
           } else document.getElementById('lbl-rio').innerText = "";
         } catch(e) { document.getElementById('lbl-rio').innerText = ""; }
@@ -255,6 +260,11 @@
         filtrarPeixes(bacia, isRepresa, isRioGrande, cur);
 
       } catch (e) { console.log(e); fecharSplash(); }
+    }
+
+    // --- GERADOR DE LINKS AUTOMÁTICOS ---
+    function makeShopLink(termo) {
+        return `https://www.google.com/search?tbm=shop&q=comprar+${encodeURIComponent(termo)}`;
     }
 
     function filtrarPeixes(bacia, isRepresa, isRioGrande, w) {
@@ -267,7 +277,6 @@
         let score = 80 - Math.abs(w.temperature_2m - p.idealT) * 3;
         if(p.tag === 'represa') { if(isRepresa) score += 20; else score -= 40; }
         if(p.tag === 'rio_grande') { if(isRioGrande) score += 20; else score -= 15; }
-        // Se for rio pequeno (não represa/rio grande), bonifica peixes menores
         if(!isRepresa && !isRioGrande && ["traira", "mandi", "tilapia", "piau"].includes(p.id)) score += 15;
         
         return {...p, score: Math.min(99, Math.max(20, Math.round(score)))};
@@ -280,16 +289,27 @@
       resultado.forEach(p => {
         const color = p.score > 75 ? '#dcfce7' : '#fef9c3';
         const txtColor = p.score > 75 ? '#166534' : '#854d0e';
+        
+        // GERA LINKS AUTOMÁTICOS AQUI
+        const linkIsca = makeShopLink("isca " + p.isca);
+        const linkEquip = makeShopLink(p.equip);
+
         lista.innerHTML += `
           <div class="fish-card">
             <div class="card-head"><span class="f-name">${p.nome}</span><span class="f-score" style="background:${color}; color:${txtColor}">${p.score}%</span></div>
-            <div class="tech-info">
-              <div class="info-box"><span class="ib-lbl">Isca</span><span class="ib-val">${p.isca}</span></div>
-              <div class="info-box"><span class="ib-lbl">Equipamento</span><span class="ib-val">${p.equip}</span></div>
-              <div class="info-box"><span class="ib-lbl">Linha</span><span class="ib-val">${p.linha}</span></div>
-              <div class="info-box"><span class="ib-lbl">Anzol</span><span class="ib-val">${p.anzol}</span></div>
-              <div class="info-box"><span class="ib-lbl">Chumbada</span><span class="ib-val">${p.chumbo}</span></div>
-              <div class="info-box"><span class="ib-lbl">Local</span><span class="ib-val">${p.prof}</span></div>
+            <div class="tech-grid">
+              <div class="tech-item gold" style="grid-column:span 2">
+                <span class="ib-lbl">Isca Matadeira (Toque para comprar)</span>
+                <span class="ib-val"><a href="${linkIsca}" target="_blank" class="smart-link">${p.isca} <span class="material-icons" style="font-size:10px">open_in_new</span></a></span>
+              </div>
+              <div class="tech-item">
+                <span class="ib-lbl">Equipamento</span>
+                <span class="ib-val"><a href="${linkEquip}" target="_blank" class="smart-link">${p.equip}</a></span>
+              </div>
+              <div class="tech-item"><span class="ib-lbl">Linha</span><span class="ib-val">${p.linha}</span></div>
+              <div class="tech-item"><span class="ib-lbl">Anzol</span><span class="ib-val">${p.anzol}</span></div>
+              <div class="tech-item"><span class="ib-lbl">Chumbada</span><span class="ib-val">${p.chumbo}</span></div>
+              <div class="tech-item"><span class="ib-lbl">Local</span><span class="ib-val">${p.prof}</span></div>
             </div>
           </div>`;
       });
@@ -303,7 +323,7 @@
       const btn = document.getElementById('gps-btn'); btn.classList.add('loading');
       navigator.geolocation.getCurrentPosition(p => {
         btn.classList.remove('loading');
-        map.setView([p.coords.latitude, p.coords.longitude], 11); // Zoom 11 (Contexto)
+        map.setView([p.coords.latitude, p.coords.longitude], 11); // Zoom 11
         rodarRadar(p.coords.latitude, p.coords.longitude);
       }, () => { btn.classList.remove('loading'); alert("Ative a localização"); fecharSplash(); });
     }
@@ -314,10 +334,8 @@
       fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}, Brazil&addressdetails=1`).then(r=>r.json()).then(d=>{
         if(d[0]) { 
           const lat = parseFloat(d[0].lat); const lng = parseFloat(d[0].lon); 
-          map.setView([lat, lng], 11); // Zoom 11 (não 13)
+          map.setView([lat, lng], 11); 
           rodarRadar(lat, lng, d[0].address); 
-          
-          // No mobile, abre a gaveta após a busca
           if(window.innerWidth <= 768) {
              const d = document.getElementById('painel');
              d.classList.add('open'); d.style.height = '70vh';
@@ -330,7 +348,7 @@
     // Auto-update no arrasto
     map.on('moveend', () => {
         const c = map.getCenter();
-        if(Math.abs(c.lat - lastLat) > 0.02) { // Só atualiza se moveu bastante
+        if(Math.abs(c.lat - lastLat) > 0.02) { 
             lastLat = c.lat;
             setTimeout(() => rodarRadar(c.lat, c.lng), 800);
         }
