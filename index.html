@@ -99,7 +99,7 @@
       </svg>
     </div>
     <h1 class="splash-title">RADAR DA PESCA</h1>
-    <p class="splash-sub">Carregando dados técnicos...</p>
+    <p class="splash-sub">Ajustando sensores...</p>
   </div>
 
   <div class="top-bar">
@@ -120,7 +120,7 @@
     <div class="summary" id="drawer-summary">
       <div class="header-row">
         <div class="status-badge"><span class="material-icons" style="font-size:12px;">sensors</span> RADAR ONLINE</div>
-        </div>
+      </div>
       <h2 class="city-label" id="lbl-cidade">📍 Aguardando...</h2>
       <span id="lbl-rio" class="river-tag"></span>
       
@@ -149,56 +149,53 @@
     const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([-15.7, -47.9], 5);
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}').addTo(map);
 
-    // --- CORREÇÃO: DETECTAR ARRASTO DO MAPA ---
-    map.on('moveend', () => {
-        const c = map.getCenter();
-        rodarRadar({ lat: c.lat, lng: c.lng });
-    });
-
     let lastCoords = { lat: 0, lng: 0 };
     const UF_MAP = {"Acre":"AC","Alagoas":"AL","Amapá":"AP","Amazonas":"AM","Bahia":"BA","Ceará":"CE","Distrito Federal":"DF","Espírito Santo":"ES","Goiás":"GO","Maranhão":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Pará":"PA","Paraíba":"PB","Paraná":"PR","Pernambuco":"PE","Piauí":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rondônia":"RO","Roraima":"RR","Santa Catarina":"SC","São Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
 
-    // === BANCO DE DADOS (SEM LAMBARI) ===
+    // === BANCO DE DADOS EXPANDIDO (Versão V10) ===
     const PEIXES_DB = [
+      // GERAL (Aparecem em quase todo lugar)
       { 
-        id: 'traira', nome: "Traíra", tag: 'geral', bacia: ["Geral","Rio Grande"], isca: "Frog, Lambari, Spinner", idealT: 23, h: "Crepúsculo", prof: "Raso/Mato", 
-        equip: "Vara 17lb (5'6\") + Molinete 2000", linha: "Multi 0.25mm + Leader", 
-        chumbo: "Sem peso (Artificial) ou Oliva 5g", anzol: "Offset 3/0 ou Garatéia" 
+        id: 'traira', nome: "Traíra", tag: 'geral', bacia: ["Geral","Rio Grande","Nordeste"], isca: "Frog, Lambari", idealT: 23, h: "Crepúsculo", prof: "Raso/Mato", 
+        equip: "Vara 17lb + Molinete 2000", linha: "Multi 0.25mm", chumbo: "Sem peso", anzol: "Offset 3/0" 
       },
       { 
-        id: 'tilapia', nome: "Tilápia", tag: 'geral', bacia: ["Geral","Rio Grande"], isca: "Massa, Ração, Minhoca", idealT: 25, h: "Manhã/Tarde", prof: "1-3m", 
-        equip: "Vara Telescópica 4,5m ou Molinete Micro", linha: "0.25mm (Mono)", 
-        chumbo: "Arroz ou Palito (Leve)", anzol: "Chinu nº 4 ou 5" 
+        id: 'tilapia', nome: "Tilápia", tag: 'geral', bacia: ["Geral","Rio Grande","Nordeste"], isca: "Massa, Ração", idealT: 25, h: "Manhã/Tarde", prof: "1-3m", 
+        equip: "Vara Telescópica 4,5m", linha: "0.25mm (Mono)", chumbo: "Arroz", anzol: "Chinu nº 4" 
       },
       { 
-        id: 'mandi', nome: "Mandi", tag: 'couro', bacia: ["Geral","Rio Grande"], isca: "Minhoca, Queijo", idealT: 24, h: "Noite/Chuva", prof: "Fundo", 
-        equip: "Vara 12-15lb + Molinete Médio", linha: "0.30mm (Mono)", 
-        chumbo: "Oliva 15g a 25g (Média)", anzol: "Maruseigo nº 12 ou 14" 
+        id: 'mandi', nome: "Mandi", tag: 'couro', bacia: ["Geral","Rio Grande","Nordeste"], isca: "Minhoca, Queijo", idealT: 24, h: "Noite/Chuva", prof: "Fundo", 
+        equip: "Vara 12lb + Molinete", linha: "0.30mm (Mono)", chumbo: "Oliva 15g", anzol: "Maruseigo 12" 
       },
       { 
-        id: 'bagre', nome: "Bagre / Jundiá", tag: 'couro', bacia: ["Geral","Rio Grande"], isca: "Minhoca, Fígado", idealT: 22, h: "Noite/Chuva", prof: "Fundo", 
-        equip: "Vara 17lb + Molinete 2500", linha: "0.35mm (Mono)", 
-        chumbo: "Oliva 20g (Fundo)", anzol: "Maruseigo nº 16" 
+        id: 'piau', nome: "Piau", tag: 'geral', bacia: ["Geral","Nordeste","São Francisco"], isca: "Milho, Massa", idealT: 24, h: "Dia", prof: "Fundo/Correnteza", 
+        equip: "Vara 15lb Ponta Fina", linha: "0.28mm (Mono)", chumbo: "Oliva Pequena", anzol: "Chinu nº 3" 
       },
+      { 
+        id: 'curimba', nome: "Curimba", tag: 'geral', bacia: ["Geral","Nordeste","Paraná"], isca: "Massa Doce", idealT: 22, h: "Dia", prof: "Fundo/Barro", 
+        equip: "Vara 17lb Média", linha: "0.30mm (Mono)", chumbo: "Oliva 20g", anzol: "Maruseigo 14" 
+      },
+      { 
+        id: 'pacu', nome: "Pacu / Caranha", tag: 'geral', bacia: ["Geral","Paraná"], isca: "Coquinho, Massa", idealT: 25, h: "Dia", prof: "Fundo", 
+        equip: "Vara 25lb Média", linha: "0.40mm (Mono)", chumbo: "Oliva 30g", anzol: "Chinu nº 7" 
+      },
+
+      // ESPECÍFICOS
       { 
         id: 'piapara', nome: "Piapara", tag: 'rio_grande', bacia: ["Rio Grande","Paraná"], isca: "Milho, Caranguejo", idealT: 23, h: "Dia", prof: "Fundo/Ceva", 
-        equip: "Vara Ponta Sensível 20lb + Carretilha", linha: "0.30mm (Mono) + Leader", 
-        chumbo: "Oliva ou Redonda (conforme correnteza)", anzol: "Chinu nº 3 a 5" 
+        equip: "Vara Ponta Sensível 20lb", linha: "0.30mm", chumbo: "Redonda", anzol: "Chinu 4" 
       },
       { 
         id: 'dourado', nome: "Dourado", tag: 'rio_grande', bacia: ["Rio Grande","Paraná"], isca: "Tuvira, Artificial", idealT: 24, h: "Sol forte", prof: "Corredeira", 
-        equip: "Vara 40lb Ação Rápida + Carretilha", linha: "0.40mm (Multi) + Cabo Aço", 
-        chumbo: "Sem peso (Artificial) ou Oliva", anzol: "7/0 ou Garatéia 4x" 
+        equip: "Vara 40lb Rápida", linha: "0.40mm Multi", chumbo: "Sem peso", anzol: "7/0" 
       },
       { 
-        id: 'tucunare_azul', nome: "Tucunaré Azul", tag: 'represa', bacia: ["Rio Grande","Paraná","Tocantins"], isca: "Zara, Stick", idealT: 27, h: "Sol a pino", prof: "0.5-3m", 
-        equip: "Vara 17-20lb Rápida + Carretilha", linha: "0.28mm (Multi) + Leader Fluor", 
-        chumbo: "Nenhuma (Isca Artificial)", anzol: "Garatéias Reforçadas" 
+        id: 'tucunare_azul', nome: "Tucunaré", tag: 'represa', bacia: ["Rio Grande","Paraná","Tocantins","Nordeste"], isca: "Artificial", idealT: 27, h: "Sol", prof: "0.5-3m", 
+        equip: "Vara 20lb Rápida", linha: "0.28mm Multi", chumbo: "Nenhum", anzol: "Garatéia" 
       },
       { 
-        id: 'tambaqui', nome: "Tambaqui", tag: 'geral', bacia: ["Amazonas"], isca: "Salsicha, Frutas", idealT: 28, h: "Dia", prof: "Superfície", 
-        equip: "Vara 40-50lb Pesada + Carretilha", linha: "0.50mm (Mono)", 
-        chumbo: "Boia Cevadeira (Pesqueiro)", anzol: "Maruseigo 22 ou Circular 5/0" 
+        id: 'tambaqui', nome: "Tambaqui", tag: 'geral', bacia: ["Amazonas","Nordeste"], isca: "Salsicha", idealT: 28, h: "Dia", prof: "Superfície", 
+        equip: "Vara 40lb Pesada", linha: "0.50mm Mono", chumbo: "Boia", anzol: "Circular 5/0" 
       }
     ];
 
@@ -207,6 +204,13 @@
     const handle = document.getElementById('drawer-handle');
     let startY = 0, startH = 0, isDragging = false;
     const minH = 230, maxH = window.innerHeight * 0.94;
+
+    // --- ARRASTO DO MAPA ---
+    map.on('moveend', () => {
+        const c = map.getCenter();
+        // Pequeno delay para não flodar a API
+        setTimeout(() => rodarRadar({ lat: c.lat, lng: c.lng }), 500);
+    });
 
     const getClientY = (e) => e.touches ? e.touches[0].clientY : e.clientY;
     const startDrag = (e) => { if (drawer.offsetHeight >= maxH - 10 && scrollContent.scrollTop > 0 && !handle.contains(e.target)) return; startY = getClientY(e); startH = drawer.offsetHeight; isDragging = true; drawer.classList.add('dragging'); };
@@ -244,25 +248,28 @@
 
         const [geoData, resW, nomeRio] = await Promise.all([fetchGeo(), fetchWeather, fetchRiver]);
         addr = geoData;
-        const uf = UF_MAP[addr.state] || "BR"; 
-        const cid = addr.city || addr.town || addr.village || addr.municipality || "Local Remoto";
+        const uf = UF_MAP[addr.state] || "BR"; const cid = addr.city || addr.town || addr.village || "Local";
         document.getElementById('lbl-cidade').innerText = `📍 ${cid}-${uf}`;
 
+        // === LÓGICA DE BACIA EXPANDIDA ===
         let bacia = "Geral";
         if (uf === "MG") { bacia = (coords.lat < -18.5 && coords.lon > -48) ? "Rio Grande" : ((coords.lon < -48) ? "Paraná" : "São Francisco"); }
-        else if (["SP"].includes(uf)) bacia = "Rio Grande"; else if (["MS","PR","SC","RS"].includes(uf)) bacia = "Paraná"; else if (["BA","PE","AL","SE"].includes(uf)) bacia = "São Francisco"; else if (JSON.stringify(addr).toLowerCase().includes("amazon") || ["AM","PA","RO"].includes(uf)) bacia = "Amazonas";
+        else if (["PI","MA","CE","RN","PB","PE","AL","SE","BA"].includes(uf)) bacia = "Nordeste"; // REGRA NORDESTE
+        else if (["SP"].includes(uf)) bacia = "Rio Grande"; 
+        else if (["MS","PR","SC","RS"].includes(uf)) bacia = "Paraná"; 
+        else if (JSON.stringify(addr).toLowerCase().includes("amazon") || ["AM","PA","RO"].includes(uf)) bacia = "Amazonas";
         
         let isRepresa = false, isRioGrande = false;
         if (nomeRio) {
           document.getElementById('lbl-rio').innerText = `📍 Próximo ao: ${nomeRio}`;
           const rioUp = nomeRio.toUpperCase();
-          if (rioUp.includes("REPRESA") || rioUp.includes("LAGO") || rioUp.includes("BARRAGEM")) isRepresa = true;
+          if (rioUp.includes("REPRESA") || rioUp.includes("LAGO") || rioUp.includes("BARRAGEM") || rioUp.includes("AÇUDE")) isRepresa = true;
           if (rioUp.includes("RIO GRANDE")) isRioGrande = true;
-          if (rioUp.includes("SÃO FRANCISCO")) bacia = "São Francisco";
-          if (rioUp.includes("INGAÍ")) bacia = "Rio Grande"; 
+          if (rioUp.includes("PARNAÍBA")) bacia = "Nordeste";
         } else { document.getElementById('lbl-rio').innerText = ""; }
 
-        // REMOVIDO: Badge visual da Bacia
+        // Bacia Nordeste geralmente tem muitas represas/açudes
+        if (bacia === "Nordeste") isRepresa = true; 
 
         const cur = resW.current; const moon = getMoonData();
         document.getElementById('val-temp').innerHTML = `${getWeatherIcon(cur.weathercode)} ${Math.round(cur.temperature_2m)}°C`;
@@ -281,21 +288,21 @@
           let score = 80 - Math.abs(cur.temperature_2m - p.idealT) * 4;
           if (p.tag === 'represa') score += isRepresa ? 20 : -100;
           if (p.tag === 'rio_grande') score += (isRioGrande || isRepresa) ? 10 : -40;
-          if (!isRepresa && !isRioGrande && ["traira", "mandi", "bagre", "tilapia"].includes(p.id)) score += 15;
+          if (!isRepresa && !isRioGrande && ["traira", "mandi", "tilapia", "piau"].includes(p.id)) score += 15;
           if (cur.precipitation > 0.5) { if (p.tag === 'couro') score += 15; if (p.tag === 'visual') score -= 10; }
           else if (cur.weathercode <= 3) { if (p.tag === 'visual') score += 5; }
           if(moon.n === "Cheia") score += 5;
           return {...p, score: Math.min(100, Math.max(0, Math.round(score)))};
         }).sort((a,b) => b.score - a.score);
 
-        const visibleFish = sortedFish.filter(p => p.score > 50);
+        const visibleFish = sortedFish.filter(p => p.score > 40); // Filtro suavizado
 
         visibleFish.slice(0,3).forEach(p => {
           top3C.innerHTML += `<div class="fish-chip"><div class="score-dot" style="background:${p.score > 70 ? '#10b981' : '#f59e0b'}"></div>${p.nome}</div>`;
         });
 
         if(visibleFish.length === 0) {
-            listC.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">Condições difíceis. Tente tilápia na margem.</div>';
+            listC.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">Condições difíceis.</div>';
         } else {
             visibleFish.forEach(p => {
               const matchColor = p.score > 80 ? '#dcfce7' : '#fef3c7';
