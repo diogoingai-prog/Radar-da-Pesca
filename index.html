@@ -154,13 +154,8 @@
     let lastCoords = { lat: 0, lng: 0 };
     const UF_MAP = {"Acre":"AC","Alagoas":"AL","Amapá":"AP","Amazonas":"AM","Bahia":"BA","Ceará":"CE","Distrito Federal":"DF","Espírito Santo":"ES","Goiás":"GO","Maranhão":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Pará":"PA","Paraíba":"PB","Paraná":"PR","Pernambuco":"PE","Piauí":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rondônia":"RO","Roraima":"RR","Santa Catarina":"SC","São Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
 
-    // === BANCO DE DADOS DETALHADO (Versão Mestre) ===
+    // === BANCO DE DADOS DETALHADO (SEM LAMBARI) ===
     const PEIXES_DB = [
-      { 
-        id: 'lambari', nome: "Lambari", tag: 'geral', bacia: ["Geral","Rio Grande"], isca: "Massinha, Mosca, Pão", idealT: 22, h: "Dia todo", prof: "Raso", 
-        equip: "Vara Telescópica 3,6m a 4,5m (Bambu/Fibra)", linha: "0.15mm a 0.20mm (Mono)", 
-        chumbo: "Chumbada Arroz (bem leve)", anzol: "Mosquito (nº 12 a 16)" 
-      },
       { 
         id: 'traira', nome: "Traíra", tag: 'geral', bacia: ["Geral","Rio Grande"], isca: "Frog, Lambari, Spinner", idealT: 23, h: "Crepúsculo", prof: "Raso/Mato", 
         equip: "Vara 17lb (5'6\") + Molinete 2000", linha: "Multi 0.25mm + Leader", 
@@ -280,7 +275,7 @@
           let score = 80 - Math.abs(cur.temperature_2m - p.idealT) * 4;
           if (p.tag === 'represa') score += isRepresa ? 20 : -100;
           if (p.tag === 'rio_grande') score += (isRioGrande || isRepresa) ? 10 : -40;
-          if (!isRepresa && !isRioGrande && ["lambari", "traira", "mandi", "bagre", "tilapia"].includes(p.id)) score += 15;
+          if (!isRepresa && !isRioGrande && ["traira", "mandi", "bagre", "tilapia"].includes(p.id)) score += 15;
           if (cur.precipitation > 0.5) { if (p.tag === 'couro') score += 15; if (p.tag === 'visual') score -= 10; }
           else if (cur.weathercode <= 3) { if (p.tag === 'visual') score += 5; }
           if(moon.n === "Cheia") score += 5;
@@ -297,7 +292,7 @@
 
         // LISTA DETALHADA
         if(visibleFish.length === 0) {
-            listC.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">Condições difíceis. Tente lambari ou tilápia na margem.</div>';
+            listC.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">Condições difíceis. Tente tilápia na margem.</div>';
         } else {
             visibleFish.forEach(p => {
               const matchColor = p.score > 80 ? '#dcfce7' : '#fef3c7';
