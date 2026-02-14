@@ -138,6 +138,12 @@
       <div class="footer-msg">O Radar da Pesca cruza dados meteorológicos com o comportamento dos peixes para indicar qual espécie está ativa e a melhor estratégia de pesca.</div>
       <div class="piracema-warning">⚠️ RESPEITE A PIRACEMA ⚠️</div>
     </div>
+    <div style="margin-top: 20px; padding: 15px; border-top: 1px dotted #ccc; text-align: center; font-size: 11px;">
+    <a href="privacidade.html" style="text-decoration: none; color: #666; margin-right: 10px;">Privacidade</a>
+    <span style="color: #ccc;">|</span>
+    <a href="termos.html" style="text-decoration: none; color: #666; margin-left: 10px;">Termos de Uso</a>
+    <p style="color: #999; margin-top: 10px;">© 2026 Radar da Pesca</p>
+</div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -298,13 +304,6 @@
     map.on('moveend', () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => rodarRadar(map.getCenter()), 800); });
     window.onload = () => { iniciarGPS(); setTimeout(fecharSplash, 4000); };
   </script>
-  
-  <footer style="text-align: center; padding: 20px; font-family: sans-serif; font-size: 14px; margin-top: 30px; border-top: 1px solid #eee;">
-    <p>&copy; 2026 Radar da Pesca</p>
-    <a href="privacidade.html" style="text-decoration: none; color: #0056b3;">Política de Privacidade</a> | 
-    <a href="termos.html" style="text-decoration: none; color: #0056b3;">Termos de Uso</a>
-</footer>
-
 </body>
 </html>
 
