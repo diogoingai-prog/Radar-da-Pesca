@@ -1,422 +1,304 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Radar da Pesca 📡</title>
-  
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  
-  <style>
-    :root { --accent: #0ea5e9; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --green: #16a34a; }
-    body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: var(--bg); overflow: hidden; color: var(--text); -webkit-tap-highlight-color: transparent; }
-    
-    /* SPLASH */
-    #splash { position: fixed; inset: 0; background: #0f172a; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.5s; }
-    .loader { width: 48px; height: 48px; border: 5px solid #fff; border-bottom-color: var(--accent); border-radius: 50%; animation: rot 1s linear infinite; }
-    @keyframes rot { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .splash-txt { color: #fff; margin-top: 20px; font-weight: 700; font-size: 14px; letter-spacing: 2px; }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Radar de Pesca</title>
 
-    /* MAPA */
-    #map { height: 100vh; width: 100vw; z-index: 1; background: #e5e7eb; }
-    .crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; pointer-events: none; color: #0f172a; opacity: 0.8; }
-    
-    /* UI ELEMENTS */
-    .top-bar { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 2000; display: flex; justify-content: center; pointer-events: none; }
-    .search-box { pointer-events: auto; background: #fff; border-radius: 50px; padding: 10px 20px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
-    .search-input { border: none; outline: none; width: 100%; font-size: 16px; color: #334155; }
-    
-    .gps-btn { position: absolute; bottom: 340px; right: 20px; z-index: 2500; background: #fff; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); color: var(--accent); cursor: pointer; transition: 0.2s; }
-    .gps-btn.loading { animation: rot 1s linear infinite; }
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
-    /* LAYOUT INTELIGENTE (PC vs CELULAR) */
-    .drawer { position: absolute; z-index: 2000; background: var(--card); display: flex; flex-direction: column; transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1); }
+<style>
+/* =======================
+   RESET / BASE
+======================= */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, Helvetica, sans-serif; background:#0e1621; color:#fff; }
 
-    /* Mobile */
-    @media (max-width: 768px) {
-      .drawer { bottom: 0; left: 0; right: 0; border-radius: 24px 24px 0 0; box-shadow: 0 -5px 30px rgba(0,0,0,0.15); height: 320px; max-height: 92vh; }
-      .drawer.open { height: 90vh; }
-      .handle { display: flex; }
-    }
+/* =======================
+   MAPA
+======================= */
+#map { height: 100vh; width: 100vw; }
 
-    /* Desktop */
-    @media (min-width: 769px) {
-      .drawer { top: 20px; bottom: 20px; left: 20px; width: 380px; height: auto !important; border-radius: 16px; box-shadow: 0 5px 25px rgba(0,0,0,0.1); }
-      .handle { display: none !important; }
-      .top-bar { left: 420px; justify-content: flex-start; }
-      .gps-btn { bottom: 30px; right: 30px; }
-    }
-    
-    .handle { height: 30px; width: 100%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: grab; background: #fff; border-bottom: 1px solid #f1f5f9; }
-    .handle-bar { width: 40px; height: 5px; background: #cbd5e1; border-radius: 10px; }
+/* =======================
+   PAINEL
+======================= */
+.panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #111c2a;
+  border-radius: 16px 16px 0 0;
+  padding: 14px;
+  max-height: 55vh;
+  overflow-y: auto;
+  box-shadow: 0 -4px 20px rgba(0,0,0,.4);
+}
 
-    /* CABEÇALHO (Área de toque para arrastar no mobile) */
-    .drag-zone { cursor: grab; user-select: none; padding: 10px 20px; flex-shrink: 0; background: #fff; }
-    
-    .status-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-    .status-badge { font-size: 10px; font-weight: 800; color: var(--green); display: flex; align-items: center; gap: 4px; text-transform: uppercase; }
+.panel h2 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
 
-    .city-label { font-size: 22px; font-weight: 800; color: #0f172a; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .river-tag { font-size: 11px; color: var(--accent); font-weight: 700; display: block; margin-top: 2px; margin-bottom: 12px; text-transform: uppercase; }
+.info {
+  font-size: 14px;
+  margin-bottom: 6px;
+  opacity: .95;
+}
 
-    .env-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
-    .env-box { background: #f8fafc; padding: 8px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0; }
-    .env-val { font-size: 13px; font-weight: 700; color: #0f172a; display: block; }
-    .env-lbl { font-size: 9px; font-weight: 600; color: #64748b; text-transform: uppercase; }
+.badge {
+  display:inline-block;
+  padding:2px 8px;
+  border-radius:12px;
+  font-size:12px;
+  background:#1f6feb;
+  margin-left:6px;
+}
 
-    .top-picks { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; margin-bottom: 10px; }
-    .chip { background: #0f172a; color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; }
+/* =======================
+   BOTÕES
+======================= */
+.controls {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-    /* CONTEÚDO COM SCROLL */
-    .content-area { flex: 1; overflow-y: auto; padding: 0 20px 40px 20px; -webkit-overflow-scrolling: touch; background: #fff; }
-    
-    /* BOLETIM DE NOTÍCIAS */
-    .news-card { background: #eff6ff; border-left: 4px solid var(--accent); padding: 12px; margin-bottom: 15px; border-radius: 8px; }
-    .news-title { font-size: 10px; font-weight: 800; color: var(--accent); text-transform: uppercase; display: block; margin-bottom: 4px; }
-    .news-text { font-size: 12px; font-weight: 600; color: #1e3a8a; line-height: 1.4; }
+.btn {
+  background:#1f6feb;
+  color:#fff;
+  border:none;
+  padding:10px 12px;
+  border-radius:50%;
+  cursor:pointer;
+  font-size:16px;
+}
 
-    .fish-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
-    .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .f-name { font-size: 16px; font-weight: 800; color: #0f172a; }
-    .f-score { font-size: 10px; font-weight: 700; background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 6px; }
-    
-    .tech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .info-box { background: #f8fafc; padding: 6px 8px; border-radius: 6px; }
-    .ib-lbl { font-size: 8px; font-weight: 700; color: #64748b; display: block; margin-bottom: 2px; }
-    .ib-val { font-size: 11px; font-weight: 600; color: #334155; line-height: 1.2; }
-    .smart-link { color: var(--accent); text-decoration: none; border-bottom: 1px dashed; cursor: pointer; }
+.btn.loading span {
+  display:inline-block;
+  animation: rot 1s linear infinite;
+}
 
-    .ad-slot { width: 100%; height: 90px; background: #f1f5f9; border: 2px dashed #cbd5e1; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 15px 0; color: #94a3b8; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
-  </style>
+@keyframes rot {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* =======================
+   SPLASH
+======================= */
+#splash {
+  position: fixed;
+  inset: 0;
+  background:#0e1621;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index: 9999;
+}
+
+#splash.hidden { display:none; }
+
+@media(min-width: 769px){
+  .panel { max-width: 420px; left: 12px; right: auto; bottom: 12px; border-radius:16px; }
+}
+</style>
 </head>
+
 <body>
 
-  <div id="splash">
-    <div class="loader"></div>
-    <div class="splash-txt">ATUALIZANDO SISTEMA...</div>
-  </div>
+<div id="map"></div>
 
-  <div class="top-bar">
-    <div class="search-box">
-      <span class="material-icons" style="color:#94a3b8">search</span>
-      <input type="text" id="search-input" class="search-input" placeholder="Buscar local..." onkeypress="if(event.key==='Enter') buscarManual()">
-      <span class="material-icons" onclick="buscarManual()" style="color:#0f172a; cursor:pointer;">arrow_forward</span>
-    </div>
-  </div>
+<div id="splash">
+  <h2>Carregando Radar de Pesca…</h2>
+</div>
 
-  <div class="gps-btn" id="gps-btn" onclick="iniciarGPS()"><span class="material-icons">my_location</span></div>
-  <div id="map"></div>
-  <div class="crosshair"><span class="material-icons" style="font-size:32px; opacity:0.7;">add</span></div>
+<div class="controls">
+  <button id="btnGps" class="btn"><span>📍</span></button>
+</div>
 
-  <div class="drawer" id="painel">
-    <div class="handle"><div class="handle-bar"></div></div>
-    
-    <div class="drag-zone" id="drag-header">
-      <div class="status-row">
-        <div class="status-badge"><span class="material-icons" style="font-size:12px;">sensors</span> MONITORAMENTO ATIVO</div>
-      </div>
-      <h1 class="city-label" id="lbl-cidade">Carregando...</h1>
-      <span class="river-tag" id="lbl-rio"></span>
+<div class="panel">
+  <h2 id="lbl-local">Localizando…</h2>
+  <div class="info">🌡️ <span id="lbl-temp">--</span> °C</div>
+  <div class="info">💨 Vento: <span id="lbl-vento">--</span> km/h</div>
+  <div class="info">🌙 Lua: <span id="lbl-lua">--</span></div>
+  <div class="info">🌊 Ambiente: <span id="lbl-rio">--</span></div>
+  <div class="info">🐟 Peixes indicados:</div>
+  <div id="lista-peixes" class="info">--</div>
+</div>
 
-      <div class="env-grid">
-        <div class="env-box"><span class="env-lbl">Temp</span><span class="env-val" id="val-temp">--</span></div>
-        <div class="env-box"><span class="env-lbl">Vento</span><span class="env-val" id="val-vento">--</span></div>
-        <div class="env-box"><span class="env-lbl">Lua</span><span class="env-val" id="val-lua">--</span></div>
-        <div class="env-box"><span class="env-lbl">Pressão</span><span class="env-val" id="val-press">--</span></div>
-        <div class="env-box"><span class="env-lbl">Chuva</span><span class="env-val" id="val-chuva">--</span></div>
-        <div class="env-box"><span class="env-lbl">Umidade</span><span class="env-val" id="val-hum">--</span></div>
-      </div>
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-      <div class="top-picks" id="chips-container"></div>
-    </div>
+<script>
+/* =======================
+   CONFIG
+======================= */
+const DEFAULT_POS = { lat: -18.5122, lng: -44.5550 }; // MG
+const cache = new Map();
 
-    <div class="content-area" id="scroll-content">
-      
-      <div class="news-card">
-        <span class="news-title">📰 Boletim da Pesca - Hoje</span>
-        <span class="news-text" id="news-text">Carregando dicas do dia...</span>
-      </div>
+/* =======================
+   MAPA
+======================= */
+const map = L.map('map').setView([DEFAULT_POS.lat, DEFAULT_POS.lng], 7);
 
-      <div class="ad-slot">PUBLICIDADE GOOGLE</div>
-      
-      <div style="font-size:11px; font-weight:800; color:#94a3b8; text-transform:uppercase; margin-bottom:10px;">Melhores Oportunidades no Local</div>
-      <div id="lista-peixes"></div>
-      
-      <div style="text-align:center; padding:10px; color:#cbd5e1; font-size:9px;">RADAR V21.0</div>
-    </div>
-  </div>
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '© OpenStreetMap'
+}).addTo(map);
 
-  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-  <script>
-    const map = L.map('map', { zoomControl: false }).setView([-15.7, -47.9], 5);
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}').addTo(map);
+let marker = L.marker([DEFAULT_POS.lat, DEFAULT_POS.lng]).addTo(map);
 
-    let lastLat = 0, lastLng = 0;
-    
-    // === NOTÍCIAS DIÁRIAS (Baseado no Dia do Ano) ===
-    const NOTICIAS = [
-      "Atenção: A pressão atmosférica está ideal para pesca de fundo hoje.",
-      "Dica: Em dias nublados, tente iscas de superfície com cores vibrantes.",
-      "Alerta: Nível dos rios subindo na região Sudeste. Cuidado com correnteza.",
-      "Dica Pro: Lua Minguante é excelente para fisgar peixes de couro.",
-      "Fato: O Tucunaré fica mais agressivo com o sol a pino (11h-14h).",
-      "Dica: Use líder de fluorocarbono em águas claras para não espantar o peixe.",
-      "Hoje: A atividade dos peixes aumenta antes da chuva. Aproveite!",
-      "Curiosidade: O Dourado prefere águas rápidas e oxigenadas."
-    ];
-    // Pega uma notícia baseada no dia do mês
-    const hojeIndex = new Date().getDate() % NOTICIAS.length;
-    document.getElementById('news-text').innerText = NOTICIAS[hojeIndex];
+/* =======================
+   SPLASH
+======================= */
+const splash = document.getElementById('splash');
+const SPLASH_TIMEOUT = setTimeout(() => fecharSplash(), 6000);
+function fecharSplash(){
+  clearTimeout(SPLASH_TIMEOUT);
+  splash.classList.add('hidden');
+}
 
-    // === BANCO DE DADOS (38 PEIXES) ===
-    const PEIXES_DB = [
-      { id: 'tucunare_azul', nome: "Tucunaré Azul", bacia: ["Geral","Paraná","Sudeste"], isca: "Zara, Stick, Jig", equip: "17lb Rápida", linha: "Multi 0.23mm", h: "Sol Forte", p: "Estruturas" },
-      { id: 'tucunare_amarelo', nome: "Tucunaré Amarelo", bacia: ["Geral","Sudeste","Nordeste"], isca: "Spinner, Jig, Lambari", equip: "14lb Média", linha: "Multi 0.20mm", h: "Dia", p: "Margens" },
-      { id: 'tucunare_acu', nome: "Tucunaré Açu", bacia: ["Amazonas"], isca: "Hélices Grandes, Jigs", equip: "30lb Pesada", linha: "Multi 0.50mm", h: "Sol", p: "Ressacas" },
-      { id: 'dourado', nome: "Dourado", bacia: ["Paraná","São Francisco","Sul"], isca: "Tuvira, Artificial", equip: "40lb Rápida", linha: "Multi 0.40mm", h: "Dia", p: "Corredeiras" },
-      { id: 'traira', nome: "Traíra", bacia: ["Geral","Nordeste"], isca: "Frog, Artificial", equip: "17lb Média", linha: "Multi 0.25mm", h: "Crepúsculo", p: "Vegetação" },
-      { id: 'trairao', nome: "Trairão", bacia: ["Amazonas","Centro-Oeste"], isca: "Iscas Grandes", equip: "50lb Pesada", linha: "Multi 0.60mm", h: "Dia", p: "Galhadas" },
-      { id: 'bicuda', nome: "Bicuda", bacia: ["Amazonas","Tocantins"], isca: "Colheres, Plugs Rápidos", equip: "20lb Rápida", linha: "Multi 0.30mm", h: "Sol", p: "Corredeiras" },
-      { id: 'cachorro', nome: "Cachorra", bacia: ["Amazonas","Paraná"], isca: "Peixes, Plugs Fundos", equip: "30lb", linha: "Multi 0.40mm", h: "Dia/Noite", p: "Poços" },
-      { id: 'matrinxa', nome: "Matrinxã", bacia: ["Amazonas","Araguaia"], isca: "Frutas, Colheres", equip: "17lb", linha: "Mono 0.30mm", h: "Dia", p: "Correnteza" },
-      { id: 'tabarana', nome: "Tabarana", bacia: ["Paraná","São Francisco"], isca: "Lambari, Spinner", equip: "14lb", linha: "Mono 0.28mm", h: "Dia", p: "Corredeiras Claras" },
-      { id: 'blackbass', nome: "Black Bass", bacia: ["Sul","Sudeste"], isca: "Minhoca Soft, Plug", equip: "14lb", linha: "Fluor 0.25mm", h: "Dia", p: "Estruturas" },
-      { id: 'apapa', nome: "Apapá", bacia: ["Amazonas","Prata"], isca: "Colher, Superfície", equip: "20lb", linha: "Multi 0.30mm", h: "Fim de tarde", p: "Superfície" },
-      { id: 'arawana', nome: "Aruanã", bacia: ["Amazonas"], isca: "Insetos, Superfície", equip: "20lb", linha: "Multi 0.30mm", h: "Dia", p: "Margens" },
-      { id: 'jacunda', nome: "Jacundá", bacia: ["Geral"], isca: "Spinner, Camarão", equip: "10lb", linha: "Mono 0.25mm", h: "Dia", p: "Pedras" },
-      { id: 'pintado', nome: "Pintado", bacia: ["Paraná","São Francisco","Pantanal"], isca: "Tuvira, Minhocuçu", equip: "50lb Pesada", linha: "Mono 0.50mm", h: "Noite", p: "Poços Fundos" },
-      { id: 'cachara', nome: "Cachara", bacia: ["Amazonas","Pantanal"], isca: "Tuvira, Iscas Artificiais", equip: "40lb", linha: "Mono 0.45mm", h: "Crepúsculo", p: "Barrancos" },
-      { id: 'jau', nome: "Jaú", bacia: ["Paraná","Amazonas"], isca: "Piau inteiro, Minhocuçu", equip: "80lb Extra Pesada", linha: "Mono 0.90mm", h: "Noite", p: "Poços de Pedra" },
-      { id: 'pirarara', nome: "Pirarara", bacia: ["Amazonas","Araguaia"], isca: "Peixe morto, Queijo", equip: "80lb", linha: "Mono 0.80mm", h: "Qualquer", p: "Poços" },
-      { id: 'piraiba', nome: "Piraíba", bacia: ["Amazonas"], isca: "Peixes inteiros", equip: "120lb Guincho", linha: "Mono 1.0mm", h: "Noite", p: "Canal do Rio" },
-      { id: 'mandi', nome: "Mandi", bacia: ["Geral","Nordeste"], isca: "Minhoca, Queijo", equip: "12lb Leve", linha: "Mono 0.30mm", h: "Noite/Chuva", p: "Fundo Arenoso" },
-      { id: 'bagre', nome: "Bagre / Jundiá", bacia: ["Geral","Sul"], isca: "Minhoca, Fígado", equip: "17lb", linha: "Mono 0.35mm", h: "Noite", p: "Remansos" },
-      { id: 'jurupoca', nome: "Jurupoca", bacia: ["Paraná","Pantanal"], isca: "Minhoca, Tuvira P", equip: "20lb", linha: "Mono 0.35mm", h: "Fim de tarde", p: "Boca de Lagoa" },
-      { id: 'barbado', nome: "Barbado", bacia: ["Geral"], isca: "Pedaço de peixe", equip: "30lb", linha: "Mono 0.40mm", h: "Noite", p: "Correnteza" },
-      { id: 'piramutaba', nome: "Piramutaba", bacia: ["Amazonas"], isca: "Peixe em pedaços", equip: "40lb", linha: "Mono 0.50mm", h: "Noite", p: "Canal Fundo" },
-      { id: 'tilapia', nome: "Tilápia", bacia: ["Geral","Nordeste"], isca: "Massa, Ração, Minhoca", equip: "Telescópica", linha: "Mono 0.25mm", h: "Dia", p: "Remansos" },
-      { id: 'pacu', nome: "Pacu", bacia: ["Paraná","Pantanal"], isca: "Coquinho, Massa, Caranguejo", equip: "25lb", linha: "Mono 0.40mm", h: "Dia", p: "Embaixo de Fruteiras" },
-      { id: 'tambaqui', nome: "Tambaqui", bacia: ["Amazonas","Geral"], isca: "Salsicha, Frutas", equip: "40lb", linha: "Mono 0.50mm", h: "Dia", p: "Lagos" },
-      { id: 'tambacu', nome: "Tambacu", bacia: ["Geral"], isca: "Ração, Massa", equip: "30lb", linha: "Mono 0.45mm", h: "Dia", p: "Pesqueiros/Lagos" },
-      { id: 'piapara', nome: "Piapara", bacia: ["Paraná","São Francisco"], isca: "Milho, Caranguejo", equip: "20lb Sensível", linha: "Mono 0.30mm", h: "Dia", p: "Cevas Fundo" },
-      { id: 'piau', nome: "Piau", bacia: ["Geral","Nordeste"], isca: "Milho, Massa, Caramujo", equip: "17lb", linha: "Mono 0.30mm", h: "Dia", p: "Correnteza" },
-      { id: 'curimba', nome: "Curimba", bacia: ["Geral","Nordeste"], isca: "Massa Doce", equip: "17lb", linha: "Mono 0.30mm", h: "Dia", p: "Fundo com Barro" },
-      { id: 'carpa', nome: "Carpa", bacia: ["Sul","Sudeste"], isca: "Massa de Batata, Milho", equip: "25lb", linha: "Mono 0.35mm", h: "Dia", p: "Lagos Parados" },
-      { id: 'pirarucu', nome: "Pirarucu", bacia: ["Amazonas"], isca: "Peixe vivo, Isca Soft", equip: "80lb Pesada", linha: "Multi 0.80mm", h: "Dia", p: "Lagos (Subida)" },
-      { id: 'corvina', nome: "Corvina", bacia: ["Geral","Nordeste"], isca: "Camarão, Jig", equip: "17lb", linha: "Mono 0.30mm", h: "Dia/Noite", p: "Fundo" },
-      { id: 'piranha', nome: "Piranha", bacia: ["Geral"], isca: "Carne, Sangue", equip: "20lb Cabo Aço", linha: "Multi 0.30mm", h: "Dia", p: "Remansos" },
-      { id: 'lambari', nome: "Lambari", bacia: ["Geral"], isca: "Massinha, Mosca", equip: "Micro", linha: "Mono 0.15mm", h: "Dia", p: "Raso" }
-    ];
+/* =======================
+   HELPERS
+======================= */
+async function fetchComCache(url, headers = {}) {
+  if (cache.has(url)) return cache.get(url);
+  const res = await fetch(url, { headers });
+  const data = await res.json();
+  cache.set(url, data);
+  return data;
+}
 
-    const UF_MAP = {"Acre":"AC","Alagoas":"AL","Amapá":"AP","Amazonas":"AM","Bahia":"BA","Ceará":"CE","Distrito Federal":"DF","Espírito Santo":"ES","Goiás":"GO","Maranhão":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Pará":"PA","Paraíba":"PB","Paraná":"PR","Pernambuco":"PE","Piauí":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rondônia":"RO","Roraima":"RR","Santa Catarina":"SC","São Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
+function getLua() {
+  const diff = (Date.now() - new Date('2000-01-06').getTime()) / 86400000;
+  const phase = Math.floor((diff % 29.53) / 7.38);
+  return ["Nova","Crescente","Cheia","Minguante"][phase];
+}
 
-    // --- GESTOS MOBILE (GAVETA DESTRAVADA) ---
-    const drawer = document.getElementById('painel');
-    const dragHeader = document.getElementById('drag-header');
-    let startY = 0, startH = 0;
+/* =======================
+   CLIMA
+======================= */
+async function obterClima({lat,lng}) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true`;
+  const d = await fetchComCache(url);
+  return {
+    temp: d.current_weather.temperature,
+    vento: d.current_weather.windspeed
+  };
+}
 
-    if(window.innerWidth <= 768) {
-        dragHeader.addEventListener('touchstart', e => { 
-            if(e.target.closest('.chip')) return; 
-            startY = e.touches[0].clientY; 
-            startH = drawer.offsetHeight; 
-        }, {passive: false});
-        
-        dragHeader.addEventListener('touchmove', e => {
-            if(e.target.closest('.chip')) return; // Permite rolar chips horizontalmente
-            const delta = startY - e.touches[0].clientY;
-            const newH = Math.min(window.innerHeight * 0.9, Math.max(320, startH + delta));
-            drawer.style.height = `${newH}px`;
-            e.preventDefault(); 
-        }, {passive: false});
+/* =======================
+   ENDEREÇO
+======================= */
+async function obterEndereco({lat,lng}) {
+  const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+  const d = await fetchComCache(url, { "Accept-Language":"pt-BR" });
+  return d.address?.city || d.address?.town || d.address?.state || "Local desconhecido";
+}
 
-        dragHeader.addEventListener('touchend', () => {
-            if (drawer.offsetHeight > 450) drawer.classList.add('open');
-            else { drawer.classList.remove('open'); drawer.style.height = '320px'; }
-        });
-    }
+/* =======================
+   RIO / REPRESA (OVERPASS)
+======================= */
+async function detectarAmbiente(lat,lng) {
+  const q = `
+  [out:json][timeout:3];
+  way["waterway"="river"](around:3000,${lat},${lng});
+  out tags 1;
+  `;
+  const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(q);
+  const d = await fetchComCache(url);
+  return d.elements.length ? "Rio" : "Represa / Lago";
+}
 
-    // --- LÓGICA PRINCIPAL ---
-    
-    // Atualiza ao mover o mapa
-    map.on('moveend', () => {
-        const c = map.getCenter();
-        if(Math.abs(c.lat - lastLat) > 0.01) { // Só se moveu significativamente
-            setTimeout(() => rodarRadar({ lat: c.lat, lng: c.lng }), 600);
-        }
-    });
+/* =======================
+   BANCO DE PEIXES
+======================= */
+const PEIXES_DB = [
+  { nome:"Tilápia", quente:true },
+  { nome:"Traíra", quente:true },
+  { nome:"Tucunaré", quente:true },
+  { nome:"Pacu", quente:false },
+  { nome:"Dourado", quente:false }
+];
 
-    async function rodarRadar(coords, preAddr = null) {
-      lastLat = coords.lat; lastLng = coords.lng;
-      try {
-        // 1. Clima + Cidade
-        const wReq = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,precipitation,weathercode`);
-        const wData = await wReq.json();
-        const cur = wData.current;
-        
-        document.getElementById('val-temp').innerText = `${Math.round(cur.temperature_2m)}°C`;
-        document.getElementById('val-vento').innerText = `${Math.round(cur.wind_speed_10m)} km/h`;
-        document.getElementById('val-press').innerText = `${Math.round(cur.surface_pressure)} hPa`;
-        document.getElementById('val-chuva').innerText = `${cur.precipitation} mm`;
-        document.getElementById('val-hum').innerText = `${cur.relative_humidity_2m}%`;
-        document.getElementById('val-lua').innerText = getLua();
+function recomendarPeixes(temp) {
+  return PEIXES_DB
+    .filter(p => temp >= 22 ? p.quente : true)
+    .map(p => p.nome)
+    .join(", ");
+}
 
-        let addr = preAddr;
-        if(!addr) {
-          const gReq = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}`);
-          const gData = await gReq.json();
-          addr = gData.address || {};
-        }
-        
-        const cidade = addr.city || addr.town || addr.village || addr.municipality || "Local";
-        const uf = UF_MAP[addr.state] || "BR";
-        document.getElementById('lbl-cidade').innerText = `${cidade}-${uf}`;
+/* =======================
+   UI
+======================= */
+function atualizarUI({clima, local, ambiente}) {
+  document.getElementById('lbl-local').innerText = local;
+  document.getElementById('lbl-temp').innerText = clima.temp;
+  document.getElementById('lbl-vento').innerText = clima.vento;
+  document.getElementById('lbl-lua').innerText = getLua();
+  document.getElementById('lbl-rio').innerText = ambiente;
+  document.getElementById('lista-peixes').innerText =
+    recomendarPeixes(clima.temp) || "Nenhuma recomendação";
+}
 
-        // 2. Define Bacia
-        let bacia = "Geral";
-        if(["PI","MA","CE","RN","PB","PE","AL","SE","BA"].includes(uf)) bacia = "Nordeste";
-        else if(uf === "MG") bacia = (coords.lat < -18.5) ? "Paraná" : "São Francisco";
-        else if(["SP","PR","MS"].includes(uf)) bacia = "Paraná";
-        else if(["AM","PA","RO","RR"].includes(uf)) bacia = "Amazonas";
-        
-        if(bacia === "Nordeste") bacia = "Nordeste"; 
+/* =======================
+   RADAR PRINCIPAL
+======================= */
+async function rodarRadar(coords) {
+  try {
+    marker.setLatLng([coords.lat, coords.lng]);
+    map.setView([coords.lat, coords.lng], 13);
 
-        // 3. Detecta Rio
-        detectarRio(coords.lat, coords.lng, bacia, cur);
+    const [clima, local, ambiente] = await Promise.all([
+      obterClima(coords),
+      obterEndereco(coords),
+      detectarAmbiente(coords.lat, coords.lng)
+    ]);
 
-      } catch (e) {
-        console.log(e);
-        fecharSplash();
-      }
-    }
+    atualizarUI({ clima, local, ambiente });
+  } catch(e) {
+    document.getElementById('lbl-rio').innerText = "Dados indisponíveis";
+  } finally {
+    fecharSplash();
+  }
+}
 
-    async function detectarRio(lat, lng, bacia, weather) {
-      document.getElementById('lbl-rio').innerText = "Analisando água...";
-      let isRepresa = false, isRioGrande = false;
-      if(bacia === "Nordeste") isRepresa = true; 
+/* =======================
+   GPS
+======================= */
+const btnGps = document.getElementById('btnGps');
+btnGps.onclick = () => {
+  btnGps.classList.add('loading');
+  navigator.geolocation.getCurrentPosition(pos=>{
+    btnGps.classList.remove('loading');
+    rodarRadar({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+  }, ()=>{
+    btnGps.classList.remove('loading');
+    fecharSplash();
+  });
+};
 
-      try {
-        const controller = new AbortController();
-        const id = setTimeout(() => controller.abort(), 4000);
+/* =======================
+   DEBOUNCE MAPA
+======================= */
+let radarTimeout;
+map.on('moveend', ()=>{
+  clearTimeout(radarTimeout);
+  radarTimeout = setTimeout(()=>{
+    const c = map.getCenter();
+    rodarRadar({ lat:c.lat, lng:c.lng });
+  }, 800);
+});
 
-        const q = `[out:json][timeout:4];(way["waterway"~"river|canal"](around:5000,${lat},${lng});relation["water"~"lake|reservoir"](around:5000,${lat},${lng}););out tags center;`;
-        const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`, { signal: controller.signal });
-        clearTimeout(id);
-        
-        const data = await res.json();
-        if(data.elements && data.elements.length > 0) {
-            const corpo = data.elements.find(e => e.tags.name);
-            if(corpo) {
-                const nome = corpo.tags.name;
-                document.getElementById('lbl-rio').innerText = `Próximo: ${nome}`;
-                const nUp = nome.toUpperCase();
-                if(nUp.includes("REPRESA") || nUp.includes("LAGO") || nUp.includes("AÇUDE") || nUp.includes("BARRAGEM")) isRepresa = true;
-                if(nUp.includes("RIO GRANDE") || nUp.includes("PARANÁ")) isRioGrande = true;
-                if(nUp.includes("PARNAÍBA")) bacia = "Nordeste";
-            } else document.getElementById('lbl-rio').innerText = "Corpo d'água sem nome";
-        } else {
-            document.getElementById('lbl-rio').innerText = "Nenhum rio grande detectado";
-        }
-      } catch(e) { document.getElementById('lbl-rio').innerText = ""; }
-
-      filtrarPeixes(bacia, isRepresa, isRioGrande, weather);
-    }
-
-    function makeShopLink(termo) {
-        return `https://www.google.com/search?tbm=shop&q=comprar+${encodeURIComponent(termo)}`;
-    }
-
-    function filtrarPeixes(bacia, isRepresa, isRioGrande, w) {
-      const top3 = document.getElementById('chips-container');
-      const lista = document.getElementById('lista-peixes');
-      top3.innerHTML = ""; lista.innerHTML = "";
-
-      const resultado = PEIXES_DB.filter(p => p.bacia.includes(bacia) || p.bacia.includes("Geral"))
-      .map(p => {
-        let score = 80 - Math.abs(w.temperature_2m - 25) * 1.5;
-        if(p.id.includes('tucunare') && isRepresa) score += 15;
-        if(p.id.includes('dourado') && isRioGrande) score += 15;
-        if(p.tag === 'represa' && !isRepresa) score -= 30; 
-        if(p.tag === 'rio_grande' && !isRioGrande) score -= 20;
-        
-        return {...p, score: Math.min(99, Math.max(20, Math.round(score)))};
-      }).sort((a,b) => b.score - a.score);
-
-      // --- FILTRO DE EXIBIÇÃO ---
-      // Mostra apenas peixes com chance > 50% para não poluir a gaveta
-      const peixesRelevantes = resultado.filter(p => p.score > 50);
-
-      // Renderiza Top 3 (Chips)
-      peixesRelevantes.slice(0,3).forEach(p => {
-        top3.innerHTML += `<div class="chip"><div class="dot" style="background:${p.score>70?'#16a34a':'#eab308'}"></div>${p.nome}</div>`;
-      });
-
-      // Renderiza Lista (Filtrada)
-      if(peixesRelevantes.length === 0) {
-          lista.innerHTML = "<div style='text-align:center; padding:20px; color:#64748b;'>Condições difíceis hoje. Tente Lambari ou Tilápia.</div>";
-      } else {
-          peixesRelevantes.forEach(p => {
-            const color = p.score > 75 ? '#dcfce7' : '#fef9c3';
-            const txtColor = p.score > 75 ? '#166534' : '#854d0e';
-            const linkIsca = makeShopLink("isca " + p.isca);
-            const linkEquip = makeShopLink(p.equip);
-
-            lista.innerHTML += `
-              <div class="fish-card">
-                <div class="card-head"><span class="f-name">${p.nome}</span><span class="f-score" style="background:${color}; color:${txtColor}">${p.score}%</span></div>
-                <div class="tech-grid">
-                  <div class="info-box" style="grid-column:span 2; border-left:3px solid #0ea5e9">
-                    <span class="ib-lbl">Isca (Toque p/ comprar)</span>
-                    <span class="ib-val"><a href="${linkIsca}" target="_blank" class="smart-link">${p.isca} <span class="material-icons" style="font-size:10px">open_in_new</span></a></span>
-                  </div>
-                  <div class="info-box">
-                    <span class="ib-lbl">Equipamento</span>
-                    <span class="ib-val"><a href="${linkEquip}" target="_blank" class="smart-link">${p.equip}</a></span>
-                  </div>
-                  <div class="info-box"><span class="ib-lbl">Linha</span><span class="ib-val">${p.linha}</span></div>
-                  <div class="info-box"><span class="ib-lbl">Local</span><span class="ib-val">${p.p}</span></div>
-                </div>
-              </div>`;
-          });
-      }
-      
-      fecharSplash();
-    }
-
-    function fecharSplash() { const s = document.getElementById('splash'); if(s) { s.style.opacity = '0'; setTimeout(() => s.style.display = 'none', 500); } }
-    function getLua() { const d = new Date(); const m = ["Nova","Crescente","Cheia","Minguante"]; return m[Math.floor(d.getDate()/7) % 4]; }
-    
-    function iniciarGPS() {
-      const btn = document.getElementById('gps-btn'); btn.classList.add('loading');
-      navigator.geolocation.getCurrentPosition(p => {
-        btn.classList.remove('loading');
-        map.setView([p.coords.latitude, p.coords.longitude], 11);
-        rodarRadar({lat: p.coords.latitude, lng: p.coords.longitude});
-      }, () => { btn.classList.remove('loading'); alert("Ative a localização"); fecharSplash(); });
-    }
-
-    function buscarManual() {
-      const q = document.getElementById('search-input').value; if(!q) return;
-      document.getElementById('lbl-cidade').innerText = "Buscando...";
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}, Brazil&addressdetails=1`).then(r=>r.json()).then(d=>{
-        if(d[0]) { 
-          const lat = parseFloat(d[0].lat); const lng = parseFloat(d[0].lon); 
-          map.setView([lat, lng], 11); 
-          rodarRadar({lat, lng}, d[0].address); 
-          if(window.innerWidth <= 768) {
-             const d = document.getElementById('painel'); d.classList.add('open'); d.style.height = '85vh';
-          }
-        } else alert("Local não encontrado");
-      });
-    }
-
-    window.onload = () => { 
-      iniciarGPS(); 
-      setTimeout(fecharSplash, 4000); 
-    };
-  </script>
+/* =======================
+   INIT
+======================= */
+rodarRadar(DEFAULT_POS);
+</script>
 </body>
 </html>
