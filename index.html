@@ -15,7 +15,7 @@
     
     body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: var(--bg); overflow: hidden; color: #1e293b; touch-action: none; }
     
-    /* --- ECRÃ DE ABERTURA --- */
+    /* --- ABERTURA --- */
     #splash {
       position: fixed; inset: 0; background: var(--bg); z-index: 9999;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -29,20 +29,22 @@
     @keyframes scan-anim-reverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
     @keyframes slow-pulse { 0%, 100% { opacity: 0.1; r: 1.5; } 50% { opacity: 0.9; r: 2.2; } }
     
-    .splash-title { color: #fff; font-size: 26px; font-weight: 900; letter-spacing: 5px; margin: 30px 0 5px 0; text-align: center; }
-    .splash-sub { color: var(--accent); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; text-align: center; padding: 0 25px; line-height: 1.5; opacity: 0.8; }
+    .splash-title { color: #fff; font-size: 26px; font-weight: 900; letter-spacing: 5px; margin: 25px 0 5px 0; text-align: center; }
+    .splash-sub { color: var(--accent); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; text-align: center; padding: 0 25px; line-height: 1.4; opacity: 0.8; }
 
     /* --- MAPA --- */
     #map { height: 100vh; width: 100vw; z-index: 1; background: #e5e7eb; }
     .crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; pointer-events: none; opacity: 0.6; color: #0f172a; display: flex; align-items: center; justify-content: center; }
 
-    /* UI DE NAVEGAÇÃO */
+    /* UI TOP */
     .top-bar { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 2000; }
     .search-box { background: #fff; border-radius: 25px; padding: 10px 18px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
     .search-input { border: none; background: transparent; outline: none; width: 100%; font-size: 15px; color: #475569; font-weight: 500; }
 
+    /* GPS BUTTON */
     .gps-btn { position: absolute; bottom: 280px; right: 20px; z-index: 2500; background: #fff; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid #e0f2fe; color: #1d4ed8; cursor: pointer; transition: transform 0.2s; }
-    .gps-btn.loading { animation: spin 1s linear infinite; }
+    .gps-btn.loading { animation: spin 1s linear infinite; color: var(--accent); border-color: var(--accent); }
+    .gps-btn.error { color: var(--status-red); border-color: var(--status-red); }
     @keyframes spin { 100% { transform: rotate(360deg); } }
 
     /* --- GAVETA --- */
@@ -65,7 +67,7 @@
     .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
     .status-badge { font-size: 8px; font-weight: 800; color: var(--status-red); text-transform: uppercase; }
     .water-badge { font-size: 8px; font-weight: 900; background: var(--badge-green); color: #fff; padding: 2px 10px; border-radius: 20px; text-transform: uppercase; }
-    .city-label { font-size: 20px; font-weight: 800; color: #0f172a; margin: 0 0 10px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .city-label { font-size: 20px; font-weight: 800; color: #0f172a; margin: 0 0 10px 0; }
 
     .env-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
     .env-box { background: #f1f5f9; padding: 8px 4px; border-radius: 10px; text-align: center; }
@@ -78,7 +80,6 @@
 
     /* DETALHES */
     .details-title { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin: 0 20px 20px 20px; border-top: 1px solid #f1f5f9; padding-top: 15px; flex-shrink: 0; }
-    
     .scroll-area { 
       overflow-y: auto; flex: 1; background: #fff; -webkit-overflow-scrolling: touch; 
       padding: 0 20px 250px 20px;
@@ -91,16 +92,16 @@
     .tech-item.gold { border-left-color: #f59e0b; }
     
     .buy-link { position: absolute; right: 8px; top: 8px; color: var(--price); font-size: 7px; font-weight: 900; text-transform: uppercase; text-decoration: none; display: flex; align-items: center; }
-    .buy-link .material-icons { font-size: 8px; margin-left: 2px; }
-    
     .tech-lbl { display: block; font-size: 8px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
     .tech-val { font-size: 12.5px; font-weight: 700; color: #0f172a; line-height: 1.4; }
-    .footer-msg { text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 11px; font-weight: 600; }
+    
+    .footer-msg { text-align: center; padding: 30px 20px 5px 20px; color: #94a3b8; font-size: 11px; font-weight: 600; }
+    .piracema-warning { text-align: center; color: #ef4444; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; padding-bottom: 30px; opacity: 0.8; }
   </style>
 </head>
 <body>
 
-  <!-- ECRÃ DE ABERTURA -->
+  <!-- ABERTURA -->
   <div id="splash">
     <div class="radar-container">
       <svg viewBox="0 0 200 200" width="220" height="220">
@@ -119,23 +120,28 @@
   <div id="map"></div>
   <div class="crosshair"><span class="material-icons" style="font-size: 28px;">add</span></div>
 
+  <!-- GAVETA -->
   <div class="drawer" id="painel">
     <div class="handle" id="drawer-handle"><div class="handle-bar"></div></div>
     <div class="summary" id="drawer-summary">
       <div class="header-row"><div class="status-badge"><span class="material-icons" style="font-size:10px; vertical-align:middle;">sensors</span> RADAR OPERACIONAL</div><div class="water-badge">EXCLUSIVO ÁGUA DOCE</div></div>
-      <h2 class="city-label" id="lbl-cidade">📍 Localizando...</h2>
+      <h2 class="city-label" id="lbl-cidade">📍 Sincronizando...</h2>
       <div class="env-grid">
         <div class="env-box"><span class="env-lbl">Temperatura</span><span class="env-val" id="val-temp">--</span></div>
         <div class="env-box"><span class="env-lbl">Vento</span><span class="env-val" id="val-vento">--</span></div>
         <div class="env-box"><span class="env-lbl">Pressão</span><span class="env-val" id="val-press">--</span></div>
         <div class="env-box"><span class="env-lbl">Lua</span><span class="env-val" id="val-lua">--</span></div>
-        <div class="env-box"><span class="env-lbl">Humidade</span><span class="env-val" id="val-hum">--</span></div>
+        <div class="env-box"><span class="env-lbl">Umidade</span><span class="env-val" id="val-hum">--</span></div>
         <div class="env-box"><span class="env-lbl">Chuva</span><span class="env-val" id="val-rain">--</span></div>
       </div>
       <div class="top3-row" id="container-top3"></div>
     </div>
     <div class="details-title">Estratégia Técnica de Pesca</div>
-    <div class="scroll-area" id="scroll-content"><div id="lista-detalhada"></div><div class="footer-msg">Radar da Pesca • Sua Inteligência em Água Doce</div></div>
+    <div class="scroll-area" id="scroll-content">
+      <div id="lista-detalhada"></div>
+      <div class="footer-msg">Radar da Pesca • Sua Inteligência em Água Doce</div>
+      <div class="piracema-warning">⚠️ RESPEITE A PIRACEMA</div>
+    </div>
   </div>
 
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -147,24 +153,26 @@
     let debounceTimer = null;
     const UF_MAP = {"Acre":"AC","Alagoas":"AL","Amapá":"AP","Amazonas":"AM","Bahia":"BA","Ceará":"CE","Distrito Federal":"DF","Espírito Santo":"ES","Goiás":"GO","Maranhão":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Pará":"PA","Paraíba":"PB","Paraná":"PR","Pernambuco":"PE","Piauí":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rondônia":"RO","Roraima":"RR","Santa Catarina":"SC","São Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
 
+    // DATABASE CORRIGIDA (ANZOL ADICIONADO A TODOS)
     const PEIXES_DB = [
-      { id: 'tilapia', nome: "Tilápia", bacia: ["Paraná","São Francisco","Geral"], isca: "Massa ou Ração", idealT: 22, h: "Manhã/Tarde", prof: "1m-3m", p: "Margens/Cevas", vara: "Telescópica Lisa", linha: "0.25mm Mono", link: "https://www.mercadolivre.com.br/s/massa-tilapia" },
-      { id: 'traira', nome: "Traíra", bacia: ["Geral","Amazonas","São Francisco","Paraná","Araguaia"], isca: "Frog ou Soft Bait", idealT: 23, h: "Fim de tarde", prof: "Raso", p: "Vegetação densa", vara: "17lb Ação Rápida", linha: "Multi 0.25mm", link: "https://www.mercadolivre.com.br/s/isca-frog" },
-      { id: 'dourado', nome: "Dourado", bacia: ["Paraná","Paraguai","Uruguai","São Francisco"], isca: "Colher ou Tuvira", idealT: 24, h: "Dia todo", prof: "Meia Água", p: "Corredeiras", vara: "40lb Carretilha", linha: "Multi 0.40mm", link: "https://www.mercadolivre.com.br/s/isca-tuvira" },
-      { id: 'tucunare', nome: "Tucunaré", bacia: ["Amazonas","Araguaia","Tocantins","Paraná"], isca: "Zara ou Stick", idealT: 27, h: "Sol pleno", prof: "0.2-2m", p: "Troncos", vara: "17-25lb Carbono", linha: "Multi 0.28mm", link: "https://www.amazon.com.br/s?k=isca+tucunare" },
-      { id: 'piapara', nome: "Piapara", bacia: ["Paraná","Paraguai"], isca: "Milho ou Caranguejo", idealT: 24, h: "Manhã", prof: "4-8m", p: "Poços ceifados", vara: "20lb Média", linha: "Mono 0.35mm", link: "https://www.mercadolivre.com.br/s/anzol-piapara" },
-      { id: 'curimba', nome: "Curimba", bacia: ["Paraná","São Francisco","Araguaia"], isca: "Massa de farinha", idealT: 24, h: "Manhã", prof: "Fundo", p: "Fundos de barro", vara: "20lb Média", linha: "Mono 0.35mm", link: "https://www.mercadolivre.com.br/s/massa-curimba" },
-      { id: 'piau', nome: "Piau", bacia: ["Geral","São Francisco"], isca: "Milho ou Massa", idealT: 25, h: "Dia todo", prof: "2-5m", p: "Poços", vara: "15lb", linha: "0.30mm Mono", link: "https://www.mercadolivre.com.br/s/massa-piau" },
-      { id: 'mandi', nome: "Mandi", bacia: ["Geral"], isca: "Minhoca", idealT: 22, h: "Noite", prof: "Fundo", p: "Margens", vara: "Leve", linha: "0.25mm", link: "https://www.mercadolivre.com.br/s/minhoca-pesca" },
-      { id: 'pintado', nome: "Pintado", bacia: ["Paraná","Paraguai","São Francisco"], isca: "Tuvira ou Piau", idealT: 24, h: "Noite", prof: "Fundo", p: "Poços fundos", vara: "80lb Pesada", linha: "0.70mm Mono", link: "https://www.mercadolivre.com.br/s/piau-vivo-pesca" },
-      { id: 'tambaqui', nome: "Tambaqui", bacia: ["Amazonas","Araguaia"], isca: "Frutas ou Massa", idealT: 28, h: "Manhã", prof: "2m-5m", p: "Árvores", vara: "50lb Média", linha: "0.50mm", link: "https://www.mercadolivre.com.br/s/massa-pesca-tambaqui" },
-      { id: 'pirarucu', nome: "Pirarucu", bacia: ["Amazonas"], isca: "Peixe vivo", idealT: 29, h: "Dia", prof: "Superfície", p: "Lagos", vara: "100lb+", linha: "Multi 0.90mm", link: "https://www.mercadolivre.com.br" },
-      { id: 'cachorra', nome: "Cachorra", bacia: ["Amazonas","Araguaia","Paraguai"], isca: "Colher ou Plug", idealT: 26, h: "Dia", prof: "Meia água", p: "Correnteza", vara: "25lb", linha: "Multi 0.35mm", link: "https://www.mercadolivre.com.br" },
-      { id: 'matrinxa', nome: "Matrinxã", bacia: ["Amazonas","Araguaia"], isca: "Frutas ou Plug", idealT: 26, h: "Amanhecer", prof: "Superfície", p: "Corredeiras", vara: "17lb", linha: "0.30mm", link: "https://www.mercadolivre.com.br" },
-      { id: 'jau', nome: "Jaú", bacia: ["Paraná","Paraguai","Amazonas"], isca: "Isca viva", idealT: 24, h: "Noite", prof: "Fundo", p: "Poços", vara: "120lb+", linha: "0.90mm", link: "https://www.mercadolivre.com.br" },
-      { id: 'tabarana', nome: "Tabarana", bacia: ["Paraná","São Francisco"], isca: "Plugs ou Lambari", idealT: 23, h: "Amanhecer", prof: "Superfície", p: "Pedrais", vara: "17lb Rápida", linha: "Multi 0.25mm", link: "https://www.mercadolivre.com.br" }
+      { id: 'tilapia', nome: "Tilápia", bacia: ["Paraná","São Francisco","Geral"], isca: "Massa ou Ração", idealT: 22, h: "Manhã/Tarde", prof: "1m-3m", p: "Margens/Cevas", vara: "Telescópica Lisa", linha: "0.25mm Mono", anzol: "Chinu 3-5", link: "https://www.mercadolivre.com.br/s/massa-tilapia" },
+      { id: 'traira', nome: "Traíra", bacia: ["Geral","Amazonas","São Francisco","Paraná"], isca: "Frog ou Soft Bait", idealT: 23, h: "Fim de tarde", prof: "Raso", p: "Vegetação densa", vara: "17lb Ação Rápida", linha: "Multi 0.25mm", anzol: "Offset 3/0", link: "https://www.mercadolivre.com.br/s/isca-frog" },
+      { id: 'dourado', nome: "Dourado", bacia: ["Paraná","Paraguai","Uruguai","São Francisco"], isca: "Colher ou Tuvira", idealT: 24, h: "Dia todo", prof: "Meia Água", p: "Corredeiras", vara: "40lb Carretilha", linha: "Multi 0.40mm", anzol: "n.º 28 ou 7/0", link: "https://www.mercadolivre.com.br/s/isca-tuvira" },
+      { id: 'tucunare', nome: "Tucunaré", bacia: ["Amazonas","Araguaia","Tocantins","Paraná"], isca: "Zara ou Stick", idealT: 27, h: "Sol pleno", prof: "0.2-2m", p: "Troncos", vara: "17-25lb Carbono", linha: "Multi 0.28mm", anzol: "Garateia 3X", link: "https://www.amazon.com.br/s?k=isca+tucunare" },
+      { id: 'piapara', nome: "Piapara", bacia: ["Paraná","Paraguai"], isca: "Milho ou Caranguejo", idealT: 24, h: "Manhã", prof: "4-8m", p: "Poços ceifados", vara: "20lb Média", linha: "Mono 0.35mm", anzol: "Chinu 4", link: "https://www.mercadolivre.com.br/s/anzol-piapara" },
+      { id: 'curimba', nome: "Curimba", bacia: ["Paraná","São Francisco","Araguaia"], isca: "Massa de farinha", idealT: 24, h: "Manhã", prof: "Fundo", p: "Fundos de barro", vara: "20lb Média", linha: "Mono 0.35mm", anzol: "Maruseigo 12", link: "https://www.mercadolivre.com.br/s/massa-curimba" },
+      { id: 'piau', nome: "Piau", bacia: ["Geral","São Francisco"], isca: "Milho ou Massa", idealT: 25, h: "Dia todo", prof: "2-5m", p: "Poços", vara: "15lb", linha: "0.30mm Mono", anzol: "Chinu 4", link: "https://www.mercadolivre.com.br/s/massa-piau" },
+      { id: 'mandi', nome: "Mandi", bacia: ["Geral"], isca: "Minhoca", idealT: 22, h: "Noite", prof: "Fundo", p: "Margens", vara: "Leve", linha: "0.25mm", anzol: "Maruseigo 14", link: "https://www.mercadolivre.com.br/s/minhoca-pesca" },
+      { id: 'pintado', nome: "Pintado", bacia: ["Paraná","Paraguai","São Francisco"], isca: "Tuvira ou Piau", idealT: 24, h: "Noite", prof: "Fundo", p: "Poços fundos", vara: "80lb Pesada", linha: "0.70mm Mono", anzol: "Circular 8/0", link: "https://www.mercadolivre.com.br/s/piau-vivo-pesca" },
+      { id: 'tambaqui', nome: "Tambaqui", bacia: ["Amazonas","Araguaia"], isca: "Frutas ou Massa", idealT: 28, h: "Manhã", prof: "2m-5m", p: "Árvores", vara: "50lb Média", linha: "0.50mm", anzol: "Pacu 2/0", link: "https://www.mercadolivre.com.br/s/massa-pesca-tambaqui" },
+      { id: 'pirarucu', nome: "Pirarucu", bacia: ["Amazonas"], isca: "Peixe vivo", idealT: 29, h: "Dia", prof: "Superfície", p: "Lagos", vara: "100lb+", linha: "Multi 0.90mm", anzol: "Circular 10/0", link: "https://www.mercadolivre.com.br" },
+      { id: 'cachorra', nome: "Cachorra", bacia: ["Amazonas","Araguaia","Paraguai"], isca: "Colher ou Plug", idealT: 26, h: "Dia", prof: "Meia água", p: "Correnteza", vara: "25lb", linha: "Multi 0.35mm", anzol: "Garateia 3X", link: "https://www.mercadolivre.com.br" },
+      { id: 'matrinxa', nome: "Matrinxã", bacia: ["Amazonas","Araguaia"], isca: "Frutas ou Plug", idealT: 26, h: "Amanhecer", prof: "Superfície", p: "Corredeiras", vara: "17lb", linha: "0.30mm", anzol: "Chinu 5", link: "https://www.mercadolivre.com.br" },
+      { id: 'jau', nome: "Jaú", bacia: ["Paraná","Paraguai","Amazonas"], isca: "Isca viva", idealT: 24, h: "Noite", prof: "Fundo", p: "Poços", vara: "120lb+", linha: "0.90mm", anzol: "Circular 12/0", link: "https://www.mercadolivre.com.br" },
+      { id: 'tabarana', nome: "Tabarana", bacia: ["Paraná","São Francisco"], isca: "Plugs ou Lambari", idealT: 23, h: "Amanhecer", prof: "Superfície", p: "Pedrais", vara: "17lb Rápida", linha: "Multi 0.25mm", anzol: "Garateia", link: "https://www.mercadolivre.com.br" }
     ];
 
+    // --- LÓGICA DE INTERAÇÃO (GAVETA + MAPA) ---
     const drawer = document.getElementById('painel');
     const scrollContent = document.getElementById('scroll-content');
     let startY = 0, startH = 0, isDragging = false;
@@ -189,8 +197,11 @@
     };
 
     const handleEnd = () => {
-      if (!isDragging) return; isDragging = false; drawer.classList.remove('dragging');
-      if (drawer.offsetHeight > minH + 70) { drawer.style.height = `${maxH}px`; drawer.classList.add('open'); }
+      if (!isDragging) return;
+      isDragging = false;
+      drawer.classList.remove('dragging');
+      const curr = drawer.offsetHeight;
+      if (curr > minH + 70) { drawer.style.height = `${maxH}px`; drawer.classList.add('open'); }
       else { drawer.style.height = `${minH}px`; drawer.classList.remove('open'); scrollContent.scrollTop = 0; }
     };
 
@@ -213,12 +224,17 @@
       try {
         const resGeo = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}`, { signal: abortController.signal }).then(r => r.json());
         const addr = resGeo.address || {};
-        const cid = addr.city || addr.town || addr.village || addr.municipality || "Local";
+        const fullAddr = JSON.stringify(addr).toLowerCase();
+        const cid = addr.city || addr.town || addr.village || "Local Brasileiro";
         let ufStr = "";
         if (addr.state && UF_MAP[addr.state]) ufStr = `-${UF_MAP[addr.state]}`;
-        // Lógica de leitura de múltiplos campos para achar a cidade correta
-        const finalCity = cid === "Local" && addr.county ? addr.county : cid;
-        document.getElementById('lbl-cidade').innerText = `📍 ${finalCity}${ufStr}`;
+        document.getElementById('lbl-cidade').innerText = `📍 ${cid}${ufStr}`;
+
+        let bacia = "Geral";
+        if (fullAddr.includes("amazon") || ["AM","PA","RO","RR","AC","AP"].includes(ufStr.replace("-",""))) bacia = "Amazonas";
+        else if (fullAddr.includes("francisco") || ["MG","BA","PE","AL","SE"].includes(ufStr.replace("-",""))) bacia = "São Francisco";
+        else if (fullAddr.includes("parana") || fullAddr.includes("tiet") || ["MS","PR","SP","SC"].includes(ufStr.replace("-",""))) bacia = "Paraná";
+        else if (fullAddr.includes("araguaia") || fullAddr.includes("tocantins") || ["GO","TO","MT"].includes(ufStr.replace("-",""))) bacia = "Araguaia";
 
         const resW = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,precipitation&timezone=auto`, { signal: abortController.signal }).then(r => r.json());
         const cur = resW.current;
@@ -230,14 +246,6 @@
         document.getElementById('val-lua').innerHTML = `<span style="margin-right:4px">${moon.i}</span> ${moon.n}`;
         document.getElementById('val-hum').innerText = `${cur.relative_humidity_2m}%`;
         document.getElementById('val-rain').innerText = `${cur.precipitation.toFixed(1)}mm`;
-
-        const fullAddr = JSON.stringify(addr).toLowerCase();
-        let bacia = "Geral";
-        // Lógica estendida de bacias
-        if (fullAddr.includes("amazon") || ["AM","PA","RO","RR","AC","AP"].some(x => ufStr.includes(x))) bacia = "Amazonas";
-        else if (fullAddr.includes("francisco") || ["MG","BA","PE","AL","SE"].some(x => ufStr.includes(x))) bacia = "São Francisco";
-        else if (fullAddr.includes("parana") || ["MS","PR","SP","SC","RS"].some(x => ufStr.includes(x))) bacia = "Paraná";
-        else if (fullAddr.includes("araguaia") || ["GO","TO","MT"].some(x => ufStr.includes(x))) bacia = "Araguaia";
 
         const sortedFish = PEIXES_DB.filter(p => p.bacia.includes(bacia) || p.bacia.includes("Geral"))
         .map(p => {
@@ -254,7 +262,7 @@
           document.getElementById('lista-detalhada').innerHTML += `
             <div class="fish-card">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <span style="font-weight:800; font-size:18px;">${p.nome}</span>
+                <span style="font-weight:800; font-size:17px; color:#0f172a;">${p.nome}</span>
                 <span style="font-size:9px; font-weight:800; background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:8px;">PREVISÃO ${p.score > 80 ? 'ALTA':'MODERADA'}</span>
               </div>
               <div class="tech-grid">
@@ -276,18 +284,26 @@
 
     function iniciarGPS() {
       const btn = document.getElementById('gps-btn'); btn.classList.add('loading');
+      
+      const geoOptions = { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 };
+      
       navigator.geolocation.getCurrentPosition((pos) => {
         btn.classList.remove('loading');
         const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         map.flyTo([c.lat, c.lng], 13); rodarRadar(c);
-        setTimeout(fecharSplash, 500);
-      }, () => { btn.classList.remove('loading'); rodarRadar(map.getCenter()); fecharSplash(); }, { timeout: 8000 });
+        fecharSplash();
+      }, (err) => { 
+        btn.classList.remove('loading');
+        btn.classList.add('error'); // Vermelho se falhar
+        rodarRadar(map.getCenter()); 
+        fecharSplash(); 
+      }, geoOptions);
     }
-
+    
     function buscarManual() {
       const q = document.getElementById('search-input').value;
       if(!q) return;
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`)
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&countrycodes=br&limit=1`)
         .then(r => r.json()).then(data => { if(data[0]) { const c = {lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon)}; map.setView([c.lat, c.lng], 12); rodarRadar(c); } });
     }
 
@@ -297,10 +313,13 @@
     }
 
     map.on('moveend', () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => rodarRadar(map.getCenter()), 800); });
-    window.onload = () => { iniciarGPS(); setTimeout(fecharSplash, 4000); };
+    
+    window.onload = () => { 
+      iniciarGPS(); 
+      setTimeout(fecharSplash, 5000); // Válvula de segurança de 5s
+    };
   </script>
 </body>
 </html>
-
 
 
