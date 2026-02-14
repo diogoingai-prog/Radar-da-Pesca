@@ -1,304 +1,118 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Radar de Pesca</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Radar da Pesca 📡</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<!-- Leaflet -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+    :root { --accent:#38bdf8; --bg:#0f172a; --card:#fff; --status-red:#dc2626; --badge-green:#10b981; }
+    * { box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+    html, body, #map { height:100%; margin:0; overflow:hidden; }
+    body { font-family: "Inter", sans-serif; background: var(--bg); }
 
-<style>
-/* =======================
-   RESET / BASE
-======================= */
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: Arial, Helvetica, sans-serif; background:#0e1621; color:#fff; }
+    /* SPLASH SCREEN */
+    #splash { position: fixed; inset:0; background: var(--bg); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; transition: opacity 0.5s; }
+    .radar-container{ position:relative; width:220px; height:220px; }
+    .radar-rings circle{ fill:none; stroke:rgba(56,189,248,.15); stroke-width:1; }
+    .radar-scan-line{ transform-origin:100px 100px; animation: scan-anim 4s linear infinite; }
+    @keyframes scan-anim{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+    .splash-title{ color:#fff; font-size:24px; font-weight:900; letter-spacing:3px; margin-top:20px; }
 
-/* =======================
-   MAPA
-======================= */
-#map { height: 100vh; width: 100vw; }
+    /* UI ELEMENTS */
+    .gps-btn { position:absolute; bottom:250px; right:20px; z-index:2500; background:#fff; width:54px; height:54px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.2); border:none; color:#1d4ed8; cursor:pointer; }
+    
+    .drawer { position:absolute; bottom:0; left:0; right:0; z-index:2000; background:#fff; border-radius:24px 24px 0 0; height:230px; transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display:flex; flex-direction:column; }
+    .drawer.open { height:85vh; }
+    .handle { height:35px; width:100%; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+    .handle-bar { width:40px; height:5px; background:#e2e8f0; border-radius:10px; }
 
-/* =======================
-   PAINEL
-======================= */
-.panel {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #111c2a;
-  border-radius: 16px 16px 0 0;
-  padding: 14px;
-  max-height: 55vh;
-  overflow-y: auto;
-  box-shadow: 0 -4px 20px rgba(0,0,0,.4);
-}
-
-.panel h2 {
-  font-size: 16px;
-  margin-bottom: 8px;
-}
-
-.info {
-  font-size: 14px;
-  margin-bottom: 6px;
-  opacity: .95;
-}
-
-.badge {
-  display:inline-block;
-  padding:2px 8px;
-  border-radius:12px;
-  font-size:12px;
-  background:#1f6feb;
-  margin-left:6px;
-}
-
-/* =======================
-   BOTÕES
-======================= */
-.controls {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.btn {
-  background:#1f6feb;
-  color:#fff;
-  border:none;
-  padding:10px 12px;
-  border-radius:50%;
-  cursor:pointer;
-  font-size:16px;
-}
-
-.btn.loading span {
-  display:inline-block;
-  animation: rot 1s linear infinite;
-}
-
-@keyframes rot {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-
-/* =======================
-   SPLASH
-======================= */
-#splash {
-  position: fixed;
-  inset: 0;
-  background:#0e1621;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index: 9999;
-}
-
-#splash.hidden { display:none; }
-
-@media(min-width: 769px){
-  .panel { max-width: 420px; left: 12px; right: auto; bottom: 12px; border-radius:16px; }
-}
-</style>
+    .summary { padding:0 20px 20px; }
+    .city-label { font-size:20px; font-weight:800; margin:5px 0; color:#0f172a; }
+    .env-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:15px; }
+    .env-box { background:#f8fafc; padding:10px; border-radius:12px; text-align:center; border:1px solid #e2e8f0; }
+    .env-lbl { display:block; font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase; }
+    .env-val { font-size:13px; font-weight:800; color:#0f172a; }
+  </style>
 </head>
-
 <body>
 
-<div id="map"></div>
+  <div id="splash">
+    <div class="radar-container">
+      <svg viewBox="0 0 200 200" width="200" height="200">
+        <g class="radar-rings"><circle cx="100" cy="100" r="98"/><circle cx="100" cy="100" r="70"/><circle cx="100" cy="100" r="40"/></g>
+        <g class="radar-scan-line"><path d="M 100 100 L 100 0 A 100 100 0 0 1 200 100 Z" fill="rgba(56, 189, 248, 0.3)"/></g>
+      </svg>
+    </div>
+    <h1 class="splash-title">RADAR DA PESCA</h1>
+  </div>
 
-<div id="splash">
-  <h2>Carregando Radar de Pesca…</h2>
-</div>
+  <div id="map"></div>
 
-<div class="controls">
-  <button id="btnGps" class="btn"><span>📍</span></button>
-</div>
+  <button id="gps-btn" class="gps-btn"><span class="material-icons">my_location</span></button>
 
-<div class="panel">
-  <h2 id="lbl-local">Localizando…</h2>
-  <div class="info">🌡️ <span id="lbl-temp">--</span> °C</div>
-  <div class="info">💨 Vento: <span id="lbl-vento">--</span> km/h</div>
-  <div class="info">🌙 Lua: <span id="lbl-lua">--</span></div>
-  <div class="info">🌊 Ambiente: <span id="lbl-rio">--</span></div>
-  <div class="info">🐟 Peixes indicados:</div>
-  <div id="lista-peixes" class="info">--</div>
-</div>
+  <section id="painel" class="drawer">
+    <div class="handle" id="drawer-handle"><div class="handle-bar"></div></div>
+    <div class="summary">
+      <h2 class="city-label" id="lbl-cidade">📍 Localizando...</h2>
+      <div class="env-grid">
+        <div class="env-box"><span class="env-lbl">Temp</span><span class="env-val" id="val-temp">--</span></div>
+        <div class="env-box"><span class="env-lbl">Vento</span><span class="env-val" id="val-vento">--</span></div>
+        <div class="env-box"><span class="env-lbl">Lua</span><span class="env-val" id="val-lua">--</span></div>
+        <div class="env-box"><span class="env-lbl">Pressão</span><span class="env-val" id="val-press">--</span></div>
+        <div class="env-box"><span class="env-lbl">Chuva</span><span class="env-val" id="val-rain">--</span></div>
+        <div class="env-box"><span class="env-lbl">Humid.</span><span class="env-val" id="val-hum">--</span></div>
+      </div>
+    </div>
+  </section>
 
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script>
+    // 1. Inicialização do Mapa
+    const map = L.map('map', { zoomControl: false }).setView([-15.7938, -47.8827], 4);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-<script>
-/* =======================
-   CONFIG
-======================= */
-const DEFAULT_POS = { lat: -18.5122, lng: -44.5550 }; // MG
-const cache = new Map();
+    // 2. Controle do Drawer (Painel)
+    const drawer = document.getElementById('painel');
+    document.getElementById('drawer-handle').addEventListener('click', () => {
+      drawer.classList.toggle('open');
+    });
 
-/* =======================
-   MAPA
-======================= */
-const map = L.map('map').setView([DEFAULT_POS.lat, DEFAULT_POS.lng], 7);
+    // 3. Função de Localização Real
+    const gpsBtn = document.getElementById('gps-btn');
+    gpsBtn.addEventListener('click', () => {
+      if ("geolocation" in navigator) {
+        gpsBtn.style.color = "#38bdf8";
+        navigator.geolocation.getCurrentPosition((position) => {
+          const { latitude, longitude } = position.coords;
+          map.setView([latitude, longitude], 13);
+          
+          // Simula atualização de dados ao encontrar local
+          document.getElementById('lbl-cidade').textContent = `📍 Localização Atual`;
+          document.getElementById('val-temp').textContent = '26°C';
+          document.getElementById('val-vento').textContent = '12km/h';
+          document.getElementById('val-lua').textContent = 'Crescente';
+          
+          L.marker([latitude, longitude]).addTo(map)
+            .bindPopup('Você está aqui para pescar!').openPopup();
+          
+          gpsBtn.style.color = "#1d4ed8";
+        }, () => {
+          alert("Erro ao obter localização. Verifique as permissões.");
+        });
+      }
+    });
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: '© OpenStreetMap'
-}).addTo(map);
-
-let marker = L.marker([DEFAULT_POS.lat, DEFAULT_POS.lng]).addTo(map);
-
-/* =======================
-   SPLASH
-======================= */
-const splash = document.getElementById('splash');
-const SPLASH_TIMEOUT = setTimeout(() => fecharSplash(), 6000);
-function fecharSplash(){
-  clearTimeout(SPLASH_TIMEOUT);
-  splash.classList.add('hidden');
-}
-
-/* =======================
-   HELPERS
-======================= */
-async function fetchComCache(url, headers = {}) {
-  if (cache.has(url)) return cache.get(url);
-  const res = await fetch(url, { headers });
-  const data = await res.json();
-  cache.set(url, data);
-  return data;
-}
-
-function getLua() {
-  const diff = (Date.now() - new Date('2000-01-06').getTime()) / 86400000;
-  const phase = Math.floor((diff % 29.53) / 7.38);
-  return ["Nova","Crescente","Cheia","Minguante"][phase];
-}
-
-/* =======================
-   CLIMA
-======================= */
-async function obterClima({lat,lng}) {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true`;
-  const d = await fetchComCache(url);
-  return {
-    temp: d.current_weather.temperature,
-    vento: d.current_weather.windspeed
-  };
-}
-
-/* =======================
-   ENDEREÇO
-======================= */
-async function obterEndereco({lat,lng}) {
-  const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
-  const d = await fetchComCache(url, { "Accept-Language":"pt-BR" });
-  return d.address?.city || d.address?.town || d.address?.state || "Local desconhecido";
-}
-
-/* =======================
-   RIO / REPRESA (OVERPASS)
-======================= */
-async function detectarAmbiente(lat,lng) {
-  const q = `
-  [out:json][timeout:3];
-  way["waterway"="river"](around:3000,${lat},${lng});
-  out tags 1;
-  `;
-  const url = "https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(q);
-  const d = await fetchComCache(url);
-  return d.elements.length ? "Rio" : "Represa / Lago";
-}
-
-/* =======================
-   BANCO DE PEIXES
-======================= */
-const PEIXES_DB = [
-  { nome:"Tilápia", quente:true },
-  { nome:"Traíra", quente:true },
-  { nome:"Tucunaré", quente:true },
-  { nome:"Pacu", quente:false },
-  { nome:"Dourado", quente:false }
-];
-
-function recomendarPeixes(temp) {
-  return PEIXES_DB
-    .filter(p => temp >= 22 ? p.quente : true)
-    .map(p => p.nome)
-    .join(", ");
-}
-
-/* =======================
-   UI
-======================= */
-function atualizarUI({clima, local, ambiente}) {
-  document.getElementById('lbl-local').innerText = local;
-  document.getElementById('lbl-temp').innerText = clima.temp;
-  document.getElementById('lbl-vento').innerText = clima.vento;
-  document.getElementById('lbl-lua').innerText = getLua();
-  document.getElementById('lbl-rio').innerText = ambiente;
-  document.getElementById('lista-peixes').innerText =
-    recomendarPeixes(clima.temp) || "Nenhuma recomendação";
-}
-
-/* =======================
-   RADAR PRINCIPAL
-======================= */
-async function rodarRadar(coords) {
-  try {
-    marker.setLatLng([coords.lat, coords.lng]);
-    map.setView([coords.lat, coords.lng], 13);
-
-    const [clima, local, ambiente] = await Promise.all([
-      obterClima(coords),
-      obterEndereco(coords),
-      detectarAmbiente(coords.lat, coords.lng)
-    ]);
-
-    atualizarUI({ clima, local, ambiente });
-  } catch(e) {
-    document.getElementById('lbl-rio').innerText = "Dados indisponíveis";
-  } finally {
-    fecharSplash();
-  }
-}
-
-/* =======================
-   GPS
-======================= */
-const btnGps = document.getElementById('btnGps');
-btnGps.onclick = () => {
-  btnGps.classList.add('loading');
-  navigator.geolocation.getCurrentPosition(pos=>{
-    btnGps.classList.remove('loading');
-    rodarRadar({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-  }, ()=>{
-    btnGps.classList.remove('loading');
-    fecharSplash();
-  });
-};
-
-/* =======================
-   DEBOUNCE MAPA
-======================= */
-let radarTimeout;
-map.on('moveend', ()=>{
-  clearTimeout(radarTimeout);
-  radarTimeout = setTimeout(()=>{
-    const c = map.getCenter();
-    rodarRadar({ lat:c.lat, lng:c.lng });
-  }, 800);
-});
-
-/* =======================
-   INIT
-======================= */
-rodarRadar(DEFAULT_POS);
-</script>
+    // 4. Remover Splash Screen após carregar
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('splash').style.opacity = '0';
+        setTimeout(() => document.getElementById('splash').remove(), 500);
+      }, 2000);
+    });
+  </script>
 </body>
 </html>
