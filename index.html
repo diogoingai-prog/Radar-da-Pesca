@@ -1,118 +1,306 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Radar da Pesca 📡</title>
+  
+  <!-- Dependências -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
+  
   <style>
-    :root { --accent:#38bdf8; --bg:#0f172a; --card:#fff; --status-red:#dc2626; --badge-green:#10b981; }
-    * { box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
-    html, body, #map { height:100%; margin:0; overflow:hidden; }
-    body { font-family: "Inter", sans-serif; background: var(--bg); }
-
-    /* SPLASH SCREEN */
-    #splash { position: fixed; inset:0; background: var(--bg); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; transition: opacity 0.5s; }
-    .radar-container{ position:relative; width:220px; height:220px; }
-    .radar-rings circle{ fill:none; stroke:rgba(56,189,248,.15); stroke-width:1; }
-    .radar-scan-line{ transform-origin:100px 100px; animation: scan-anim 4s linear infinite; }
-    @keyframes scan-anim{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
-    .splash-title{ color:#fff; font-size:24px; font-weight:900; letter-spacing:3px; margin-top:20px; }
-
-    /* UI ELEMENTS */
-    .gps-btn { position:absolute; bottom:250px; right:20px; z-index:2500; background:#fff; width:54px; height:54px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.2); border:none; color:#1d4ed8; cursor:pointer; }
+    :root { --accent: #38bdf8; --bg: #0f172a; --card: #ffffff; --price: #16a34a; --status-red: #dc2626; --badge-green: #10b981; }
     
-    .drawer { position:absolute; bottom:0; left:0; right:0; z-index:2000; background:#fff; border-radius:24px 24px 0 0; height:230px; transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display:flex; flex-direction:column; }
-    .drawer.open { height:85vh; }
-    .handle { height:35px; width:100%; display:flex; align-items:center; justify-content:center; cursor:pointer; }
-    .handle-bar { width:40px; height:5px; background:#e2e8f0; border-radius:10px; }
+    body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: var(--bg); overflow: hidden; color: #1e293b; touch-action: none; }
+    
+    /* --- ECRÃ DE ABERTURA --- */
+    #splash {
+      position: fixed; inset: 0; background: var(--bg); z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.8s ease-out, visibility 0.8s;
+    }
+    .radar-container { position: relative; width: 220px; height: 220px; }
+    .radar-rings circle { fill: none; stroke: rgba(56, 189, 248, 0.15); stroke-width: 1; }
+    .radar-scan-line { transform-origin: 100px 100px; animation: scan-anim-reverse 4s linear infinite; }
+    .radar-target { fill: var(--accent); animation: slow-pulse 3s ease-in-out infinite; }
+    
+    @keyframes scan-anim-reverse { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
+    @keyframes slow-pulse { 0%, 100% { opacity: 0.1; r: 1.5; } 50% { opacity: 0.9; r: 2.2; } }
+    
+    .splash-title { color: #fff; font-size: 26px; font-weight: 900; letter-spacing: 5px; margin: 30px 0 5px 0; text-align: center; }
+    .splash-sub { color: var(--accent); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; text-align: center; padding: 0 25px; line-height: 1.5; opacity: 0.8; }
 
-    .summary { padding:0 20px 20px; }
-    .city-label { font-size:20px; font-weight:800; margin:5px 0; color:#0f172a; }
-    .env-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:15px; }
-    .env-box { background:#f8fafc; padding:10px; border-radius:12px; text-align:center; border:1px solid #e2e8f0; }
-    .env-lbl { display:block; font-size:9px; font-weight:800; color:#64748b; text-transform:uppercase; }
-    .env-val { font-size:13px; font-weight:800; color:#0f172a; }
+    /* --- MAPA --- */
+    #map { height: 100vh; width: 100vw; z-index: 1; background: #e5e7eb; }
+    .crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; pointer-events: none; opacity: 0.6; color: #0f172a; display: flex; align-items: center; justify-content: center; }
+
+    .top-bar { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 2000; }
+    .search-box { background: #fff; border-radius: 25px; padding: 10px 18px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+    .search-input { border: none; background: transparent; outline: none; width: 100%; font-size: 15px; color: #475569; font-weight: 500; }
+
+    .gps-btn { position: absolute; bottom: 280px; right: 20px; z-index: 2500; background: #fff; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid #e0f2fe; color: #1d4ed8; cursor: pointer; transition: transform 0.2s; }
+    .gps-btn.loading { animation: spin 1s linear infinite; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    /* --- GAVETA --- */
+    .drawer { 
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 2000; 
+      background: var(--card); border-radius: 24px 24px 0 0; 
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.15); 
+      height: 230px; max-height: 94vh;
+      transition: height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1); 
+      display: flex; flex-direction: column; overflow: hidden;
+      touch-action: none;
+    }
+    .drawer.open { height: 94vh; }
+    .drawer.dragging { transition: none; }
+    .handle { height: 32px; width: 100%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: grab; }
+    .handle-bar { width: 45px; height: 5px; background: #e2e8f0; border-radius: 10px; }
+
+    .summary { padding: 0 20px 10px 20px; flex-shrink: 0; }
+    .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .status-badge { font-size: 8px; font-weight: 800; color: var(--status-red); text-transform: uppercase; }
+    .water-badge { font-size: 8px; font-weight: 900; background: var(--badge-green); color: #fff; padding: 2px 10px; border-radius: 20px; text-transform: uppercase; }
+    .city-label { font-size: 20px; font-weight: 800; color: #0f172a; margin: 0 0 10px 0; }
+
+    .env-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+    .env-box { background: #f1f5f9; padding: 8px 4px; border-radius: 10px; text-align: center; }
+    .env-lbl { display: block; font-size: 7px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 3px; }
+    .env-val { font-size: 11px; font-weight: 800; color: #0f172a; }
+
+    .top3-row { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; min-height: 38px; margin-bottom: 15px; }
+    .fish-chip { background: #0f172a; color: #fff; padding: 10px 16px; border-radius: 12px; display: flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 12px; font-weight: 600; }
+    .fish-chip .status-tag { font-size: 7px; font-weight: 900; background: var(--accent); color: #0f172a; padding: 1px 4px; border-radius: 3px; text-transform: uppercase; }
+
+    .details-title { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin: 0 20px 20px 20px; border-top: 1px solid #f1f5f9; padding-top: 15px; flex-shrink: 0; }
+    .scroll-area { 
+      overflow-y: auto; flex: 1; background: #fff; -webkit-overflow-scrolling: touch; 
+      padding: 0 20px 250px 20px;
+      touch-action: pan-y;
+    }
+
+    .fish-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 18px; margin-bottom: 15px; }
+    .tech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+    .tech-item { background: #fff; padding: 10px; border-radius: 12px; border-left: 4px solid var(--accent); position: relative; }
+    .tech-item.gold { border-left-color: #f59e0b; }
+    .tech-lbl { display: block; font-size: 8px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
+    .tech-val { font-size: 12.5px; font-weight: 700; color: #0f172a; line-height: 1.4; }
+    
+    .footer-msg { text-align: center; padding: 30px 20px 5px 20px; color: #94a3b8; font-size: 11px; font-weight: 600; }
+    .piracema-warning { text-align: center; color: #ef4444; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 5px; opacity: 0.8; }
   </style>
 </head>
 <body>
 
+  <!-- ECRÃ DE ABERTURA -->
   <div id="splash">
     <div class="radar-container">
-      <svg viewBox="0 0 200 200" width="200" height="200">
-        <g class="radar-rings"><circle cx="100" cy="100" r="98"/><circle cx="100" cy="100" r="70"/><circle cx="100" cy="100" r="40"/></g>
-        <g class="radar-scan-line"><path d="M 100 100 L 100 0 A 100 100 0 0 1 200 100 Z" fill="rgba(56, 189, 248, 0.3)"/></g>
+      <svg viewBox="0 0 200 200" width="220" height="220">
+        <g class="radar-rings"><circle cx="100" cy="100" r="98"/><circle cx="100" cy="100" r="75"/><circle cx="100" cy="100" r="50"/><circle cx="100" cy="100" r="25"/></g>
+        <circle cx="135" cy="65" r="2.2" class="radar-target" />
+        <g class="radar-scan-line">
+          <path d="M 100 100 L 100 0 A 100 100 0 0 1 200 100 Z" fill="rgba(56, 189, 248, 0.2)"/><line x1="100" y1="100" x2="100" y2="0" stroke="#38bdf8" stroke-width="2.5"/></g>
       </svg>
     </div>
     <h1 class="splash-title">RADAR DA PESCA</h1>
+    <p class="splash-sub">Veja em tempo real qual peixe está no radar para sua pescaria</p>
   </div>
 
+  <div class="top-bar"><div class="search-box"><span class="material-icons" style="color:#94a3b8">search</span><input type="text" id="search-input" class="search-input" placeholder="Pesquisar cidade..." onkeypress="if(event.key==='Enter') buscarManual()"><button onclick="buscarManual()" style="background:none; border:none; font-weight:900; color:#0f172a; cursor:pointer;">IR</button></div></div>
+  <div class="gps-btn" id="gps-btn" onclick="iniciarGPS()"><span class="material-icons">my_location</span></div>
   <div id="map"></div>
+  <div class="crosshair"><span class="material-icons" style="font-size: 28px;">add</span></div>
 
-  <button id="gps-btn" class="gps-btn"><span class="material-icons">my_location</span></button>
-
-  <section id="painel" class="drawer">
+  <!-- GAVETA -->
+  <div class="drawer" id="painel">
     <div class="handle" id="drawer-handle"><div class="handle-bar"></div></div>
-    <div class="summary">
+    <div class="summary" id="drawer-summary">
+      <div class="header-row"><div class="status-badge"><span class="material-icons" style="font-size:10px; vertical-align:middle;">sensors</span> RADAR OPERACIONAL</div><div class="water-badge">EXCLUSIVO ÁGUA DOCE</div></div>
       <h2 class="city-label" id="lbl-cidade">📍 Localizando...</h2>
       <div class="env-grid">
-        <div class="env-box"><span class="env-lbl">Temp</span><span class="env-val" id="val-temp">--</span></div>
+        <div class="env-box"><span class="env-lbl">Temperatura</span><span class="env-val" id="val-temp">--</span></div>
         <div class="env-box"><span class="env-lbl">Vento</span><span class="env-val" id="val-vento">--</span></div>
-        <div class="env-box"><span class="env-lbl">Lua</span><span class="env-val" id="val-lua">--</span></div>
         <div class="env-box"><span class="env-lbl">Pressão</span><span class="env-val" id="val-press">--</span></div>
+        <div class="env-box"><span class="env-lbl">Lua</span><span class="env-val" id="val-lua">--</span></div>
+        <div class="env-box"><span class="env-lbl">Umidade</span><span class="env-val" id="val-hum">--</span></div>
         <div class="env-box"><span class="env-lbl">Chuva</span><span class="env-val" id="val-rain">--</span></div>
-        <div class="env-box"><span class="env-lbl">Humid.</span><span class="env-val" id="val-hum">--</span></div>
       </div>
+
+      <div class="top3-row" id="container-top3"></div>
     </div>
-  </section>
+    <div class="details-title">Estratégia Técnica de Pesca</div>
+    <div class="scroll-area" id="scroll-content">
+      <div id="lista-detalhada"></div>
+      <div class="footer-msg">Radar da Pesca • Sua Inteligência em Água Doce</div>
+      <div class="piracema-warning">⚠️ RESPEITE A PIRACEMA</div>
+    </div>
+  </div>
 
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   <script>
-    // 1. Inicialização do Mapa
-    const map = L.map('map', { zoomControl: false }).setView([-15.7938, -47.8827], 4);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    const map = L.map('map', { zoomControl: false, attributionControl: false }).setView([-15.7, -47.9], 5);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}').addTo(map);
 
-    // 2. Controle do Drawer (Painel)
+    let abortController = null;
+    let debounceTimer = null;
+    const UF_MAP = {"Acre":"AC","Alagoas":"AL","Amapá":"AP","Amazonas":"AM","Bahia":"BA","Ceará":"CE","Distrito Federal":"DF","Espírito Santo":"ES","Goiás":"GO","Maranhão":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Pará":"PA","Paraíba":"PB","Paraná":"PR","Pernambuco":"PE","Piauí":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rondônia":"RO","Roraima":"RR","Santa Catarina":"SC","São Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
+
+    // DATABASE DE PEIXES DO BRASIL (Sem links)
+    const PEIXES_DB = [
+      { id: 'tilapia', nome: "Tilápia", bacia: ["Paraná","São Francisco","Geral"], isca: "Massa ou Ração", idealT: 22, h: "Manhã/Tarde", prof: "1m-3m", p: "Margens/Cevas", vara: "Telescópica Lisa", linha: "0.25mm Mono" },
+      { id: 'traira', nome: "Traíra", bacia: ["Geral","Amazonas","São Francisco","Paraná"], isca: "Frog ou Soft Bait", idealT: 23, h: "Fim de tarde", prof: "Raso", p: "Vegetação densa", vara: "17lb Ação Rápida", linha: "Multi 0.25mm" },
+      { id: 'dourado', nome: "Dourado", bacia: ["Paraná","Paraguai","Uruguai","São Francisco"], isca: "Colher ou Tuvira", idealT: 24, h: "Dia todo", prof: "Meia Água", p: "Corredeiras", vara: "40lb Carretilha", linha: "Multi 0.40mm" },
+      { id: 'tucunare', nome: "Tucunaré Azul", bacia: ["Paraná","Araguaia","Tocantins","Sudeste"], isca: "Zaras, Sticks ou Poppers", idealT: 27, h: "Sol pleno", prof: "0.2-2m", p: "Troncos", vara: "20lb Rápida", linha: "Multi 0.28mm" },
+      { id: 'piapara', nome: "Piapara", bacia: ["Paraná","Paraguai"], isca: "Milho ou Caranguejo", idealT: 24, h: "Manhã", prof: "4-8m", p: "Poços ceifados", vara: "20lb Média", linha: "Mono 0.35mm" },
+      { id: 'curimba', nome: "Curimba", bacia: ["Paraná","São Francisco","Araguaia"], isca: "Massa de farinha", idealT: 24, h: "Manhã", prof: "Fundo", p: "Fundos de barro", vara: "20lb Média", linha: "Mono 0.35mm" },
+      { id: 'piau', nome: "Piau", bacia: ["Geral","São Francisco"], isca: "Milho ou Massa", idealT: 25, h: "Dia todo", prof: "2-5m", p: "Poços", vara: "15lb", linha: "0.30mm Mono" },
+      { id: 'mandi', nome: "Mandi", bacia: ["Geral"], isca: "Minhoca", idealT: 22, h: "Noite", prof: "Fundo", p: "Margens", vara: "Leve", linha: "0.25mm" },
+      { id: 'pintado', nome: "Pintado", bacia: ["Paraná","Paraguai","São Francisco"], isca: "Tuvira ou Piau", idealT: 24, h: "Noite", prof: "Fundo", p: "Poços fundos", vara: "80lb Pesada", linha: "0.70mm Mono" },
+      { id: 'tambaqui', nome: "Tambaqui", bacia: ["Amazonas","Araguaia"], isca: "Frutas ou Massa", idealT: 28, h: "Manhã", prof: "2m-5m", p: "Árvores", vara: "50lb Média", linha: "0.50mm" },
+      { id: 'pirarucu', nome: "Pirarucu", bacia: ["Amazonas"], isca: "Peixe vivo", idealT: 29, h: "Dia", prof: "Superfície", p: "Lagos", vara: "100lb+", linha: "Multi 0.90mm" },
+      { id: 'cachorra', nome: "Cachorra", bacia: ["Amazonas","Araguaia","Paraguai"], isca: "Colher ou Plug", idealT: 26, h: "Dia", prof: "Meia água", p: "Correnteza", vara: "25lb", linha: "Multi 0.35mm" },
+      { id: 'matrinxa', nome: "Matrinxã", bacia: ["Amazonas","Araguaia"], isca: "Frutas ou Plug", idealT: 26, h: "Amanhecer", prof: "Superfície", p: "Corredeiras", vara: "17lb", linha: "0.30mm" },
+      { id: 'jau', nome: "Jaú", bacia: ["Paraná","Paraguai","Amazonas"], isca: "Isca viva", idealT: 24, h: "Noite", prof: "Fundo", p: "Poços", vara: "120lb+", linha: "0.90mm" },
+      { id: 'tabarana', nome: "Tabarana", bacia: ["Paraná","São Francisco"], isca: "Plugs ou Lambari", idealT: 23, h: "Amanhecer", prof: "Superfície", p: "Pedrais", vara: "17lb Rápida", linha: "Multi 0.25mm" }
+    ];
+
     const drawer = document.getElementById('painel');
-    document.getElementById('drawer-handle').addEventListener('click', () => {
-      drawer.classList.toggle('open');
-    });
+    const scrollContent = document.getElementById('scroll-content');
+    let startY = 0, startH = 0, isDragging = false;
+    const minH = 230, maxH = window.innerHeight * 0.94;
 
-    // 3. Função de Localização Real
-    const gpsBtn = document.getElementById('gps-btn');
-    gpsBtn.addEventListener('click', () => {
-      if ("geolocation" in navigator) {
-        gpsBtn.style.color = "#38bdf8";
-        navigator.geolocation.getCurrentPosition((position) => {
-          const { latitude, longitude } = position.coords;
-          map.setView([latitude, longitude], 13);
-          
-          // Simula atualização de dados ao encontrar local
-          document.getElementById('lbl-cidade').textContent = `📍 Localização Atual`;
-          document.getElementById('val-temp').textContent = '26°C';
-          document.getElementById('val-vento').textContent = '12km/h';
-          document.getElementById('val-lua').textContent = 'Crescente';
-          
-          L.marker([latitude, longitude]).addTo(map)
-            .bindPopup('Você está aqui para pescar!').openPopup();
-          
-          gpsBtn.style.color = "#1d4ed8";
-        }, () => {
-          alert("Erro ao obter localização. Verifique as permissões.");
+    const handleStart = (e) => {
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      if (drawer.offsetHeight >= maxH - 10 && scrollContent.scrollTop > 0) return;
+      startY = clientY; startH = drawer.offsetHeight; isDragging = true; drawer.classList.add('dragging');
+    };
+
+    const handleMove = (e) => {
+      if (!isDragging) return;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const deltaY = startY - clientY; 
+      if (startH >= maxH - 10 && deltaY > 0) { isDragging = false; return; }
+      let newH = startH + deltaY;
+      if (newH > maxH) newH = maxH + (newH - maxH) * 0.1;
+      if (newH < minH) newH = minH - (minH - newH) * 0.2;
+      drawer.style.height = `${newH}px`;
+      if (e.cancelable) e.preventDefault();
+    };
+
+    const handleEnd = () => {
+      if (!isDragging) return;
+      isDragging = false;
+      drawer.classList.remove('dragging');
+      const currH = drawer.offsetHeight;
+      if (currH > minH + 70) { drawer.style.height = `${maxH}px`; drawer.classList.add('open'); }
+      else { drawer.style.height = `${minH}px`; drawer.classList.remove('open'); scrollContent.scrollTop = 0; }
+    };
+
+    drawer.addEventListener('touchstart', handleStart, { passive: true });
+    window.addEventListener('touchmove', handleMove, { passive: false });
+    window.addEventListener('touchend', handleEnd);
+
+    function getMoonData() {
+      const lp = 2551443; const age = Math.floor(((new Date().getTime() - new Date(1970, 0, 7, 20, 35, 0).getTime()) / 1000) % lp / (24 * 3600)) + 1;
+      if (age <= 3) return {n: "Nova", i: "●"}; if (age <= 13) return {n: "Crescente", i: "☽"};
+      if (age <= 17) return {n: "Cheia", i: "●"}; return {n: "Minguante", i: "☾"};
+    }
+
+    async function rodarRadar(coords) {
+      if(abortController) abortController.abort();
+      abortController = new AbortController();
+      document.getElementById('container-top3').innerHTML = '';
+      document.getElementById('lista-detalhada').innerHTML = '';
+
+      try {
+        const resGeo = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.lat}&lon=${coords.lng}`, { signal: abortController.signal }).then(r => r.json());
+        const addr = resGeo.address || {};
+        const fullAddr = JSON.stringify(addr).toLowerCase();
+        const cid = addr.city || addr.town || addr.village || "Local Brasileiro";
+        let ufStr = "";
+        if (addr.state && UF_MAP[addr.state]) ufStr = `-${UF_MAP[addr.state]}`;
+        document.getElementById('lbl-cidade').innerText = `📍 ${cid}${ufStr}`;
+
+        let bacia = "Geral";
+        if (fullAddr.includes("amazon") || ["AM","PA","RO","RR","AC","AP"].includes(ufStr.replace("-",""))) bacia = "Amazonas";
+        else if (fullAddr.includes("francisco") || ["MG","BA","PE","AL","SE"].includes(ufStr.replace("-",""))) bacia = "São Francisco";
+        else if (fullAddr.includes("parana") || fullAddr.includes("tiet") || ["MS","PR","SP","SC"].includes(ufStr.replace("-",""))) bacia = "Paraná";
+        else if (fullAddr.includes("araguaia") || fullAddr.includes("tocantins") || ["GO","TO","MT"].includes(ufStr.replace("-",""))) bacia = "Araguaia";
+
+        const resW = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,precipitation&timezone=auto`, { signal: abortController.signal }).then(r => r.json());
+        const cur = resW.current;
+        const moon = getMoonData();
+
+        document.getElementById('val-temp').innerText = `${Math.round(cur.temperature_2m)}°C`;
+        document.getElementById('val-vento').innerText = `${Math.round(cur.wind_speed_10m)}km/h`;
+        document.getElementById('val-press').innerText = `${Math.round(cur.surface_pressure)}hPa`;
+        document.getElementById('val-lua').innerHTML = `<span style="margin-right:4px">${moon.i}</span> ${moon.n}`;
+        document.getElementById('val-hum').innerText = `${cur.relative_humidity_2m}%`;
+        document.getElementById('val-rain').innerText = `${cur.precipitation.toFixed(1)}mm`;
+
+        const sortedFish = PEIXES_DB.filter(p => p.bacia.includes(bacia) || p.bacia.includes("Geral"))
+        .map(p => {
+          let score = 75 - Math.abs(cur.temperature_2m - p.idealT) * 4;
+          if(moon.n === "Cheia") score += 10;
+          return {...p, score};
+        }).sort((a,b) => b.score - a.score);
+
+        sortedFish.slice(0,3).forEach(p => {
+          document.getElementById('container-top3').innerHTML += `<div class="fish-chip">${p.nome} <span class="status-tag">${p.score > 80 ? 'ALTO':'BOM'}</span></div>`;
         });
-      }
-    });
 
-    // 4. Remover Splash Screen após carregar
-    window.addEventListener('load', () => {
-      setTimeout(() => {
-        document.getElementById('splash').style.opacity = '0';
-        setTimeout(() => document.getElementById('splash').remove(), 500);
-      }, 2000);
-    });
+        sortedFish.forEach(p => {
+          document.getElementById('lista-detalhada').innerHTML += `
+            <div class="fish-card">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <span style="font-weight:800; font-size:18px;">${p.nome}</span>
+                <span style="font-size:9px; font-weight:800; background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:8px;">PREVISÃO ${p.score > 80 ? 'ALTA':'MODERADA'}</span>
+              </div>
+              <div class="tech-grid">
+                <div class="tech-item gold" style="grid-column: span 2;">
+                  <span class="tech-lbl">Isca (Gatilho)</span><span class="tech-val">${p.isca}</span>
+                </div>
+                <div class="tech-item green"><span class="tech-lbl">Horário</span><span class="tech-val">${p.h}</span></div>
+                <div class="tech-item green"><span class="tech-lbl">Profundidade</span><span class="tech-val">${p.prof}</span></div>
+                <div class="tech-item" style="grid-column: span 2; border-left-color: #3b82f6;"><span class="tech-lbl">📍 Estruturas</span><span class="tech-val">${p.p}</span></div>
+                <div class="tech-item"><span class="tech-lbl">Vara</span><span class="tech-val">${p.vara}</span></div>
+                <div class="tech-item"><span class="tech-lbl">Linha</span><span class="tech-val">${p.linha}</span></div>
+              </div>
+            </div>`;
+        });
+      } catch (e) {}
+    }
+
+    function iniciarGPS() {
+      const btn = document.getElementById('gps-btn'); btn.classList.add('loading');
+      navigator.geolocation.getCurrentPosition((pos) => {
+        btn.classList.remove('loading');
+        const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        map.flyTo([c.lat, c.lng], 13); rodarRadar(c);
+        setTimeout(fecharSplash, 500);
+      }, () => { btn.classList.remove('loading'); rodarRadar(map.getCenter()); fecharSplash(); }, { timeout: 10000 });
+    }
+
+    function buscarManual() {
+      const q = document.getElementById('search-input').value;
+      if(!q) return;
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&countrycodes=br&limit=1`)
+        .then(r => r.json()).then(data => { if(data[0]) { const c = {lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon)}; map.setView([c.lat, c.lng], 12); rodarRadar(c); } });
+    }
+
+    function fecharSplash() {
+      const s = document.getElementById('splash');
+      if(s) { s.style.opacity = '0'; setTimeout(() => s.style.display = 'none', 800); }
+    }
+
+    map.on('moveend', () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => rodarRadar(map.getCenter()), 800); });
+    window.onload = () => { iniciarGPS(); setTimeout(fecharSplash, 4000); };
   </script>
 </body>
 </html>
+
+
+
+
