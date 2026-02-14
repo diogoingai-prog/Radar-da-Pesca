@@ -141,7 +141,7 @@
   </div>
 
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-  // Camadas de mapa
+// Camadas de mapa
 const ruas = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Esri' });
 const satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Esri' });
 
@@ -154,8 +154,9 @@ const map = L.map('map', {
     attributionControl: false
 });
 
-// Botão de alternar (posicionado no topo direito para não atrapalhar o GPS)
+// Botão de alternar camadas
 L.control.layers({ "Ruas": ruas, "Satélite": satelite }, null, { position: 'topright' }).addTo(map);
+
 
 
     let abortController = null;
