@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-pt">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Radar da Pesca 📡</title>
   
-  <!-- Dependências -->
+  <!-- Dependências: Leaflet, Material Icons e Inter Font -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -36,34 +36,13 @@
     #map { height: 100vh; width: 100vw; z-index: 1; background: #e5e7eb; }
     .crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; pointer-events: none; opacity: 0.6; color: #0f172a; display: flex; align-items: center; justify-content: center; }
 
-    /* UI TOP */
     .top-bar { position: absolute; top: 15px; left: 15px; right: 15px; z-index: 2000; }
     .search-box { background: #fff; border-radius: 25px; padding: 10px 18px; display: flex; align-items: center; gap: 10px; box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
     .search-input { border: none; background: transparent; outline: none; width: 100%; font-size: 15px; color: #475569; font-weight: 500; }
 
-    /* GPS BUTTON */
     .gps-btn { position: absolute; bottom: 280px; right: 20px; z-index: 2500; background: #fff; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid #e0f2fe; color: #1d4ed8; cursor: pointer; transition: transform 0.2s; }
-    .gps-btn:active { transform: scale(0.9); }
-    .gps-btn.loading { animation: spin 1s linear infinite; color: var(--accent); border-color: var(--accent); }
-    .gps-btn.error { color: var(--status-red); border-color: var(--status-red); }
+    .gps-btn.loading { animation: spin 1s linear infinite; }
     @keyframes spin { 100% { transform: rotate(360deg); } }
-
-    /* --- MODAL ERRO GPS --- */
-    #gps-modal {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 5000;
-      display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
-    }
-    .modal-content {
-      background: #fff; width: 85%; max-width: 320px; padding: 25px; border-radius: 20px;
-      text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    }
-    .modal-icon { font-size: 40px; color: #dc2626; margin-bottom: 15px; }
-    .modal-title { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 10px; }
-    .modal-text { font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 20px; }
-    .modal-btn {
-      background: var(--accent); color: #0f172a; border: none; padding: 12px 0; width: 100%;
-      border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer;
-    }
 
     /* --- GAVETA --- */
     .drawer { 
@@ -77,7 +56,6 @@
     }
     .drawer.open { height: 94vh; }
     .drawer.dragging { transition: none; }
-    
     .handle { height: 32px; width: 100%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: grab; }
     .handle-bar { width: 45px; height: 5px; background: #e2e8f0; border-radius: 10px; }
 
@@ -97,7 +75,6 @@
     .fish-chip .status-tag { font-size: 7px; font-weight: 900; background: var(--accent); color: #0f172a; padding: 1px 4px; border-radius: 3px; text-transform: uppercase; }
 
     .details-title { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin: 0 20px 20px 20px; border-top: 1px solid #f1f5f9; padding-top: 15px; flex-shrink: 0; }
-    
     .scroll-area { 
       overflow-y: auto; flex: 1; background: #fff; -webkit-overflow-scrolling: touch; 
       padding: 0 20px 250px 20px;
@@ -108,7 +85,7 @@
     .tech-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
     .tech-item { background: #fff; padding: 10px; border-radius: 12px; border-left: 4px solid var(--accent); position: relative; }
     .tech-item.gold { border-left-color: #f59e0b; }
-    .buy-link { position: absolute; right: 8px; top: 8px; color: var(--price); font-size: 7px; font-weight: 900; text-transform: uppercase; text-decoration: none; display: flex; align-items: center; }
+    
     .tech-lbl { display: block; font-size: 8px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
     .tech-val { font-size: 12.5px; font-weight: 700; color: #0f172a; line-height: 1.4; }
     .footer-msg { text-align: center; padding: 40px 20px 5px 20px; color: #94a3b8; font-size: 11px; font-weight: 600; }
@@ -131,37 +108,23 @@
     <p class="splash-sub">Veja em tempo real qual peixe está no radar para sua pescaria</p>
   </div>
 
-  <!-- POP-UP DE ALERTA GPS -->
-  <div id="gps-modal" onclick="this.style.display='none'">
-    <div class="modal-content" onclick="event.stopPropagation()">
-      <span class="material-icons modal-icon">location_disabled</span>
-      <h3 class="modal-title">GPS Necessário</h3>
-      <p class="modal-text">Para ver os peixes da sua região, o navegador precisa da sua permissão de localização.</p>
-      <button class="modal-btn" onclick="document.getElementById('gps-modal').style.display='none'; iniciarGPS();">TENTAR NOVAMENTE</button>
-    </div>
-  </div>
-
   <div class="top-bar"><div class="search-box"><span class="material-icons" style="color:#94a3b8">search</span><input type="text" id="search-input" class="search-input" placeholder="Pesquisar cidade..." onkeypress="if(event.key==='Enter') buscarManual()"><button onclick="buscarManual()" style="background:none; border:none; font-weight:900; color:#0f172a; cursor:pointer;">IR</button></div></div>
-  
-  <!-- BOTÃO GPS (SÓ ATIVA AO CLIQUE) -->
-  <div class="gps-btn" id="gps-btn" onclick="iniciarGPS()">
-    <span class="material-icons" id="gps-icon">my_location</span>
-  </div>
-  
+  <div class="gps-btn" id="gps-btn" onclick="iniciarGPS()"><span class="material-icons">my_location</span></div>
   <div id="map"></div>
   <div class="crosshair"><span class="material-icons" style="font-size: 28px;">add</span></div>
 
+  <!-- GAVETA -->
   <div class="drawer" id="painel">
     <div class="handle" id="drawer-handle"><div class="handle-bar"></div></div>
     <div class="summary" id="drawer-summary">
       <div class="header-row"><div class="status-badge"><span class="material-icons" style="font-size:10px; vertical-align:middle;">sensors</span> RADAR OPERACIONAL</div><div class="water-badge">EXCLUSIVO ÁGUA DOCE</div></div>
-      <h2 class="city-label" id="lbl-cidade">📍 Sincronizando...</h2>
+      <h2 class="city-label" id="lbl-cidade">📍 Localizando...</h2>
       <div class="env-grid">
         <div class="env-box"><span class="env-lbl">Temperatura</span><span class="env-val" id="val-temp">--</span></div>
         <div class="env-box"><span class="env-lbl">Vento</span><span class="env-val" id="val-vento">--</span></div>
         <div class="env-box"><span class="env-lbl">Pressão</span><span class="env-val" id="val-press">--</span></div>
         <div class="env-box"><span class="env-lbl">Lua</span><span class="env-val" id="val-lua">--</span></div>
-        <div class="env-box"><span class="env-lbl">Umidade</span><span class="env-val" id="val-hum">--</span></div>
+        <div class="env-box"><span class="env-lbl">Humidade</span><span class="env-val" id="val-hum">--</span></div>
         <div class="env-box"><span class="env-lbl">Chuva</span><span class="env-val" id="val-rain">--</span></div>
       </div>
       <div class="top3-row" id="container-top3"></div>
@@ -183,23 +146,23 @@
     let debounceTimer = null;
     const UF_MAP = {"Acre":"AC","Alagoas":"AL","Amapá":"AP","Amazonas":"AM","Bahia":"BA","Ceará":"CE","Distrito Federal":"DF","Espírito Santo":"ES","Goiás":"GO","Maranhão":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Pará":"PA","Paraíba":"PB","Paraná":"PR","Pernambuco":"PE","Piauí":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rondônia":"RO","Roraima":"RR","Santa Catarina":"SC","São Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
 
-    // DATABASE DE PEIXES DO BRASIL (Sem links)
+    // DATABASE DE PEIXES - SEM LINKS
     const PEIXES_DB = [
-      { id: 'tilapia', nome: "Tilápia", bacia: ["Paraná","São Francisco","Geral"], isca: "Massa ou Ração", idealT: 22, h: "Manhã/Tarde", prof: "1m-3m", p: "Margens/Cevas", vara: "Telescópica Lisa", linha: "0.25mm Mono", anzol: "Chinu 3-5", link: "https://www.mercadolivre.com.br/s/massa-tilapia" },
-      { id: 'traira', nome: "Traíra", bacia: ["Geral","Amazonas","São Francisco","Paraná"], isca: "Frog ou Soft Bait", idealT: 23, h: "Fim de tarde", prof: "Raso", p: "Vegetação densa", vara: "17lb Ação Rápida", linha: "Multi 0.25mm", anzol: "Offset 3/0", link: "https://www.mercadolivre.com.br/s/isca-frog" },
-      { id: 'dourado', nome: "Dourado", bacia: ["Paraná","Paraguai","Uruguai","São Francisco"], isca: "Colher ou Tuvira", idealT: 24, h: "Dia todo", prof: "Meia Água", p: "Corredeiras", vara: "40lb Carretilha", linha: "Multi 0.40mm", anzol: "n.º 28 ou 7/0", link: "https://www.mercadolivre.com.br/s/isca-tuvira" },
-      { id: 'tucunare', nome: "Tucunaré", bacia: ["Amazonas","Araguaia","Tocantins","Paraná"], isca: "Zara ou Stick", idealT: 27, h: "Sol pleno", prof: "0.2-2m", p: "Troncos", vara: "20lb Rápida", linha: "Multi 0.28mm", anzol: "Garateia 3X", link: "https://www.amazon.com.br/s?k=isca+tucunare" },
-      { id: 'piapara', nome: "Piapara", bacia: ["Paraná","Paraguai"], isca: "Milho ou Caranguejo", idealT: 24, h: "Manhã", prof: "4-8m", p: "Poços ceifados", vara: "20lb Média", linha: "Mono 0.35mm", anzol: "Chinu 4", link: "https://www.mercadolivre.com.br/s/anzol-piapara" },
-      { id: 'curimba', nome: "Curimba", bacia: ["Paraná","São Francisco","Araguaia"], isca: "Massa de farinha", idealT: 24, h: "Manhã", prof: "Fundo", p: "Fundos de barro", vara: "20lb Média", linha: "Mono 0.35mm", anzol: "Maruseigo 12", link: "https://www.mercadolivre.com.br/s/massa-curimba" },
-      { id: 'piau', nome: "Piau", bacia: ["Geral","São Francisco"], isca: "Milho ou Massa", idealT: 25, h: "Dia todo", prof: "2-5m", p: "Poços", vara: "15lb", linha: "0.30mm Mono", anzol: "Chinu 4", link: "https://www.mercadolivre.com.br/s/massa-piau" },
-      { id: 'mandi', nome: "Mandi", bacia: ["Geral"], isca: "Minhoca", idealT: 22, h: "Noite", prof: "Fundo", p: "Margens", vara: "Leve", linha: "0.25mm", anzol: "Maruseigo 14", link: "https://www.mercadolivre.com.br/s/minhoca-pesca" },
-      { id: 'pintado', nome: "Pintado", bacia: ["Paraná","Paraguai","São Francisco"], isca: "Tuvira ou Piau", idealT: 24, h: "Noite", prof: "Fundo", p: "Poços fundos", vara: "80lb Pesada", linha: "0.70mm Mono", anzol: "Circular 8/0", link: "https://www.mercadolivre.com.br/s/piau-vivo-pesca" },
-      { id: 'tambaqui', nome: "Tambaqui", bacia: ["Amazonas","Araguaia"], isca: "Frutas ou Massa", idealT: 28, h: "Manhã", prof: "2m-5m", p: "Árvores", vara: "50lb Média", linha: "0.50mm", anzol: "Pacu 2/0", link: "https://www.mercadolivre.com.br/s/massa-pesca-tambaqui" },
-      { id: 'pirarucu', nome: "Pirarucu", bacia: ["Amazonas"], isca: "Peixe vivo", idealT: 29, h: "Dia", prof: "Superfície", p: "Lagos", vara: "100lb+", linha: "Multi 0.90mm", anzol: "Circular 10/0", link: "https://www.mercadolivre.com.br" },
-      { id: 'cachorra', nome: "Cachorra", bacia: ["Amazonas","Araguaia","Paraguai"], isca: "Colher ou Plug", idealT: 26, h: "Dia", prof: "Meia água", p: "Correnteza", vara: "25lb", linha: "Multi 0.35mm", anzol: "Garateia 3X", link: "https://www.mercadolivre.com.br" },
-      { id: 'matrinxa', nome: "Matrinxã", bacia: ["Amazonas","Araguaia"], isca: "Frutas ou Plug", idealT: 26, h: "Amanhecer", prof: "Superfície", p: "Corredeiras", vara: "17lb", linha: "0.30mm", anzol: "Chinu 5", link: "https://www.mercadolivre.com.br" },
-      { id: 'jau', nome: "Jaú", bacia: ["Paraná","Paraguai","Amazonas"], isca: "Isca viva", idealT: 24, h: "Noite", prof: "Fundo", p: "Poços", vara: "120lb+", linha: "0.90mm", anzol: "Circular 12/0", link: "https://www.mercadolivre.com.br" },
-      { id: 'tabarana', nome: "Tabarana", bacia: ["Paraná","São Francisco"], isca: "Plugs ou Lambari", idealT: 23, h: "Amanhecer", prof: "Superfície", p: "Pedrais", vara: "17lb Rápida", linha: "Multi 0.25mm", anzol: "Garateia", link: "https://www.mercadolivre.com.br" }
+      { id: 'tilapia', nome: "Tilápia", bacia: ["Paraná","São Francisco","Geral"], isca: "Massa ou Ração", idealT: 22, h: "Manhã/Tarde", prof: "1m-3m", p: "Margens/Cevas", vara: "Telescópica Lisa", linha: "0.25mm Mono", anzol: "Chinu 3-5" },
+      { id: 'traira', nome: "Traíra", bacia: ["Geral","Amazonas","São Francisco","Paraná"], isca: "Frog ou Soft Bait", idealT: 23, h: "Fim de tarde", prof: "Raso", p: "Vegetação densa", vara: "17lb Ação Rápida", linha: "Multi 0.25mm", anzol: "Offset 3/0" },
+      { id: 'dourado', nome: "Dourado", bacia: ["Paraná","Paraguai","Uruguai","São Francisco"], isca: "Colher ou Tuvira", idealT: 24, h: "Dia todo", prof: "Meia Água", p: "Corredeiras", vara: "40lb Carretilha", linha: "Multi 0.40mm", anzol: "n.º 28 ou 7/0" },
+      { id: 'tucunare', nome: "Tucunaré Azul", bacia: ["Paraná","Araguaia","Tocantins","Sudeste"], isca: "Zaras, Sticks ou Poppers", idealT: 27, h: "Sol pleno", prof: "0.2-2m", p: "Troncos", vara: "20lb Rápida", linha: "Multi 0.28mm", anzol: "Garateia 3X" },
+      { id: 'piapara', nome: "Piapara", bacia: ["Paraná","Paraguai"], isca: "Milho ou Caranguejo", idealT: 24, h: "Manhã", prof: "4-8m", p: "Poços ceifados", vara: "20lb Média", linha: "Mono 0.35mm", anzol: "Chinu 4" },
+      { id: 'curimba', nome: "Curimba", bacia: ["Paraná","São Francisco","Araguaia"], isca: "Massa de farinha", idealT: 24, h: "Manhã", prof: "Fundo", p: "Fundos de barro", vara: "20lb Média", linha: "Mono 0.35mm", anzol: "Maruseigo 12" },
+      { id: 'piau', nome: "Piau", bacia: ["Geral","São Francisco"], isca: "Milho ou Massa", idealT: 25, h: "Dia todo", prof: "2-5m", p: "Poços", vara: "15lb", linha: "0.30mm Mono", anzol: "Chinu 4" },
+      { id: 'mandi', nome: "Mandi", bacia: ["Geral"], isca: "Minhoca", idealT: 22, h: "Noite", prof: "Fundo", p: "Margens", vara: "Leve", linha: "0.25mm", anzol: "Maruseigo 14" },
+      { id: 'pintado', nome: "Pintado", bacia: ["Paraná","Paraguai","São Francisco"], isca: "Tuvira ou Piau", idealT: 24, h: "Noite", prof: "Fundo", p: "Poços fundos", vara: "80lb Pesada", linha: "0.70mm Mono", anzol: "Circular 8/0" },
+      { id: 'tambaqui', nome: "Tambaqui", bacia: ["Amazonas","Araguaia"], isca: "Frutas ou Massa", idealT: 28, h: "Manhã", prof: "2m-5m", p: "Árvores", vara: "50lb Média", linha: "0.50mm", anzol: "Pacu 2/0" },
+      { id: 'pirarucu', nome: "Pirarucu", bacia: ["Amazonas"], isca: "Peixe vivo", idealT: 29, h: "Dia", prof: "Superfície", p: "Lagos", vara: "100lb+", linha: "Multi 0.90mm", anzol: "Circular 10/0" },
+      { id: 'cachorra', nome: "Cachorra", bacia: ["Amazonas","Araguaia","Paraguai"], isca: "Colher ou Plug", idealT: 26, h: "Dia", prof: "Meia água", p: "Correnteza", vara: "25lb", linha: "Multi 0.35mm", anzol: "Garateia 3X" },
+      { id: 'matrinxa', nome: "Matrinxã", bacia: ["Amazonas","Araguaia"], isca: "Frutas ou Plug", idealT: 26, h: "Amanhecer", prof: "Superfície", p: "Corredeiras", vara: "17lb", linha: "0.30mm", anzol: "Chinu 5" },
+      { id: 'jau', nome: "Jaú", bacia: ["Paraná","Paraguai","Amazonas"], isca: "Isca viva", idealT: 24, h: "Noite", prof: "Fundo", p: "Poços", vara: "120lb+", linha: "0.90mm", anzol: "Circular 12/0" },
+      { id: 'tabarana', nome: "Tabarana", bacia: ["Paraná","São Francisco"], isca: "Plugs ou Lambari", idealT: 23, h: "Amanhecer", prof: "Superfície", p: "Pedrais", vara: "17lb Rápida", linha: "Multi 0.25mm", anzol: "Garateia" }
     ];
 
     const drawer = document.getElementById('painel');
@@ -252,14 +215,15 @@
         const addr = resGeo.address || {};
         const fullAddr = JSON.stringify(addr).toLowerCase();
         const cid = addr.city || addr.town || addr.village || "Local Brasileiro";
-        let uf = UF_MAP[addr.state] || "BR";
-        document.getElementById('lbl-cidade').innerText = `📍 ${cid}-${uf}`;
+        let ufStr = "";
+        if (addr.state && UF_MAP[addr.state]) ufStr = `-${UF_MAP[addr.state]}`;
+        document.getElementById('lbl-cidade').innerText = `📍 ${cid}${ufStr}`;
 
         let bacia = "Geral";
-        if (fullAddr.includes("amazon") || ["AM","PA","RO","RR","AC","AP"].includes(uf)) bacia = "Amazonas";
-        else if (fullAddr.includes("francisco") || ["MG","BA","PE","AL","SE"].includes(uf)) bacia = "São Francisco";
-        else if (fullAddr.includes("parana") || fullAddr.includes("tiet") || ["MS","PR","SP","SC"].includes(uf)) bacia = "Paraná";
-        else if (fullAddr.includes("araguaia") || fullAddr.includes("tocantins") || ["GO","TO","MT"].includes(uf)) bacia = "Araguaia";
+        if (fullAddr.includes("amazon") || ["AM","PA","RO","RR","AC","AP"].includes(ufStr.replace("-",""))) bacia = "Amazonas";
+        else if (fullAddr.includes("francisco") || ["MG","BA","PE","AL","SE"].includes(ufStr.replace("-",""))) bacia = "São Francisco";
+        else if (fullAddr.includes("parana") || ["MS","PR","SP","SC"].includes(ufStr.replace("-",""))) bacia = "Paraná";
+        else if (fullAddr.includes("araguaia") || ["GO","TO","MT"].includes(ufStr.replace("-",""))) bacia = "Araguaia";
 
         const resW = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,relative_humidity_2m,surface_pressure,wind_speed_10m,precipitation&timezone=auto`, { signal: abortController.signal }).then(r => r.json());
         const cur = resW.current;
@@ -292,14 +256,13 @@
               </div>
               <div class="tech-grid">
                 <div class="tech-item gold" style="grid-column: span 2;">
-                  <a href="${p.link}" target="_blank" class="buy-link">Onde comprar <span class="material-icons" style="font-size:8px; margin-left:2px">shopping_cart</span></a>
                   <span class="tech-lbl">Isca (Gatilho)</span><span class="tech-val">${p.isca}</span>
                 </div>
                 <div class="tech-item green"><span class="tech-lbl">Horário</span><span class="tech-val">${p.h}</span></div>
                 <div class="tech-item green"><span class="tech-lbl">Profundidade</span><span class="tech-val">${p.prof}</span></div>
                 <div class="tech-item" style="grid-column: span 2; border-left-color: #3b82f6;"><span class="tech-lbl">📍 Estruturas</span><span class="tech-val">${p.p}</span></div>
-                <div class="tech-item"><a href="https://www.mercadolivre.com.br/s/vara-pesca" target="_blank" class="buy-link">Ver</a><span class="tech-lbl">Vara</span><span class="tech-val">${p.vara}</span></div>
-                <div class="tech-item"><a href="https://www.mercadolivre.com.br/s/linha-pesca" target="_blank" class="buy-link">Ver</a><span class="tech-lbl">Linha</span><span class="tech-val">${p.linha}</span></div>
+                <div class="tech-item"><span class="tech-lbl">Vara</span><span class="tech-val">${p.vara}</span></div>
+                <div class="tech-item"><span class="tech-lbl">Linha</span><span class="tech-val">${p.linha}</span></div>
                 <div class="tech-item" style="grid-column: span 2;"><span class="tech-lbl">Anzol Recomendado</span><span class="tech-val">${p.anzol}</span></div>
               </div>
             </div>`;
@@ -314,12 +277,7 @@
         const c = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         map.flyTo([c.lat, c.lng], 13); rodarRadar(c);
         setTimeout(fecharSplash, 500);
-      }, (err) => { 
-        btn.classList.remove('loading'); 
-        document.getElementById('gps-modal').style.display = 'flex';
-        rodarRadar(map.getCenter()); 
-        fecharSplash(); 
-      }, { timeout: 10000, enableHighAccuracy: true });
+      }, () => { btn.classList.remove('loading'); rodarRadar(map.getCenter()); fecharSplash(); }, { timeout: 8000 });
     }
 
     function buscarManual() {
@@ -335,7 +293,7 @@
     }
 
     map.on('moveend', () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => rodarRadar(map.getCenter()), 800); });
-    window.onload = () => { setTimeout(fecharSplash, 3500); }; // Remove início automático, deixa para o utilizador
+    window.onload = () => { iniciarGPS(); setTimeout(fecharSplash, 4000); };
   </script>
 </body>
 </html>
